@@ -1,0 +1,69 @@
+<?php
+/**
+ * Created V/12/11/2021
+ * Updated L/01/08/2022
+ *
+ * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
+ * https://github.com/kyrena/openmage-paymentmax
+ *
+ * This program is free software, you can redistribute it or modify
+ * it under the terms of the GNU General Public License (GPL) as published
+ * by the free software foundation, either version 2 of the license, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but without any warranty, without even the implied warranty of
+ * merchantability or fitness for a particular purpose. See the
+ * GNU General Public License (GPL) for more details.
+ */
+
+$code = $this->getMethodCode();
+?>
+
+<div id="payment_form_<?php echo $code ?>" style="display:none;">
+	<?php echo $this->getText() ?>
+	<?php if ($code == 'paymentmax_tpayblik'): ?>
+		<script type="text/javascript">//<![CDATA[
+		function onTpayPaste(ev) {
+			var values = ev.clipboardData.getData('text').trim();
+			if (!/\d{6}/.test(values))
+				return ev.preventDefault();
+			values = values.toString().split('');
+			document.querySelectorAll('input.tpayOtp').forEach(function (elem, idx) {
+				elem.value = values[idx];
+				if (idx == 5)
+					self.setTimeout(function () { elem.focus(); }, 12);
+			});
+		}
+		function onTpayInput(ev, i) {
+			if ((ev.target.value.length > 0) && (i < 6))
+				document.getElementById('otpTpay' + (i + 1)).focus();
+		}
+		function onTpayKeydown(ev, i) {
+			// focus précédent
+			if ((ev.target.value.length < 1) && (ev.keyCode == 8) && (i > 1))
+				document.getElementById('otpTpay' + (i - 1)).focus();
+			// coller avec ctrl+v
+			if ((ev.keyCode == 86) && (ev.ctrlKey || ev.metaKey))
+				onTpayPaste(ev);
+			// autorise uniquement retour arrière, tab, entrée, suppr, 0..9
+			else if ((ev.keyCode != 8) && (ev.keyCode != 9) && (ev.keyCode != 13) && (ev.keyCode != 46) && !/\d/.test(ev.key))
+				return ev.preventDefault();
+		}
+		//]]></script>
+		<div class="tpayotp">
+			<?php foreach (range(1, 6) as $i): ?>
+				<input type="tel" size="2" maxlength="1" autocomplete="off"
+					class="input-text required-entry validate-digits tpayOtp" id="otpTpay<?php echo $i ?>"
+					name="payment[<?php echo $code ?>_otp][]"
+					onpaste="onTpayPaste(event);"
+					oninput="onTpayInput(event, <?php echo $i ?>);"
+					onkeydown="onTpayKeydown(event, <?php echo $i ?>);"
+					onfocus="this.select();"
+					pattern="\d{1}"
+					style="max-width:40px;" />
+			<?php endforeach ?>
+		</div>
+	<?php endif ?>
+</div>

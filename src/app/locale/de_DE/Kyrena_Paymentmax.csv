@@ -1,0 +1,7 @@
+"Hide and clear configuration","Konfiguration ausblenden und löschen"
+"Signature","Unterschrift"
+"You will be redirected to payment page after submitting order.","Du wirst zur Zahlungsseite weitergeleitet, nachdem die Bestellung bestätigt wurde."
+"Impossible to issue a refund transaction because the capture transaction does not exist.","Es kann keine Erstattung durchgeführt werden, da keine Erfassen-Transaktion für diesen Betrag existiert."
+"Refund completed by %s (%s).","Von %s geleistete Erstattung (%s)."
+"Payment canceled.","Zahlung storniert."
+"Payment refused.","Zahlung abgelehnt."

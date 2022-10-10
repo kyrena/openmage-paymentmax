@@ -1,0 +1,5 @@
+"Signature","Assinatura"
+"INCOMPLETE MODULE INSTALLATION","INSTALACAO INCOMPLETA DO MODULO"
+"There is conflict (<em>%s</em>).","Há um conflicto (<em lang=""en"">%s</em>)."
+"Impossible to issue a refund transaction because the capture transaction does not exist.","Impossível emitir uma transação de reembolso porque a transação de captura não existe."
+"Refund completed by %s (%s).","Reembolso efetuado por %s (%s)."

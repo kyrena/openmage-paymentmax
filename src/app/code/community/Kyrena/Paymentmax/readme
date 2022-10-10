@@ -1,0 +1,74 @@
+Docs      : https://github.com/kyrena/openmage-paymentmax
+Tracker   : https://github.com/kyrena/openmage-paymentmax
+Composer  : https://packagist.org/packages/kyrena/openmage-paymentmax
+Module    : Kyrena/Paymentmax
+License   : GNU GPL 2+ (https://opensource.org/licenses/gpl-2.0)
+Copyright : 2021-2022 Fabrice Creuzot <fabrice~cellublue~com>
+Copyright : 2021-2022 Jérôme Siau <jerome~cellublue~com>
+
+
+
+
+IF YOU FOUND A MISTAKE OR A BUG, PLEASE CONTACT US (IN FRENCH OR IN ENGLISH).
+CSS AND JS FILES ARE MINIFIED WITH clean-css (github.com/jakubpawlowicz/clean-css) AND uglify-js (github.com/mishoo/uglifyjs).
+ALL FILES (INCLUDING DOCUMENTATION AND TRANSLATIONS) ARE LICENSED UNDER THE TERMS OF THE GNU GPL 2+ LICENSE.
+THAT BEING SAID SOME FILES COME FROM OTHER PROJECTS AND ARE UNDER OTHER LICENSES (SEE AT THE END OF THIS FILE).
+
+
+
+
+
+Rewrite
+- global | helper | payment/data | kyrena_paymentmax/rewrite_payment
+Event
+- adminhtml | adminhtml_init_system_config                | paymentmax/observer::hideConfig
+- adminhtml | admin_system_config_changed_section_payment | paymentmax/observer::clearConfig
+- frontend  | sales_quote_collect_totals_before           | paymentmax/observer::updateCurrencyForOrder
+- frontend  | sales_quote_save_before                     | paymentmax/observer::updateCurrencyForOrder
+Cron
+- paymentmax_cancel_orders | paymentmax/observer::cancelPendingOrders
+Database
+- update core_config_data where path like payment/%
+Files and directories
+- app/locale/cs_CZ/Kyrena_Paymentmax.csv
+- app/locale/de_AT/Kyrena_Paymentmax.csv
+- app/locale/de_CH/Kyrena_Paymentmax.csv
+- app/locale/de_DE/Kyrena_Paymentmax.csv
+- app/locale/el_GR/Kyrena_Paymentmax.csv
+- app/locale/es_AR/Kyrena_Paymentmax.csv
+- app/locale/es_CL/Kyrena_Paymentmax.csv
+- app/locale/es_CO/Kyrena_Paymentmax.csv
+- app/locale/es_CR/Kyrena_Paymentmax.csv
+- app/locale/es_ES/Kyrena_Paymentmax.csv
+- app/locale/es_MX/Kyrena_Paymentmax.csv
+- app/locale/es_PA/Kyrena_Paymentmax.csv
+- app/locale/es_PE/Kyrena_Paymentmax.csv
+- app/locale/es_VE/Kyrena_Paymentmax.csv
+- app/locale/fr_CA/Kyrena_Paymentmax.csv
+- app/locale/fr_CH/Kyrena_Paymentmax.csv
+- app/locale/fr_FR/Kyrena_Paymentmax.csv
+- app/locale/hu_HU/Kyrena_Paymentmax.csv
+- app/locale/it_CH/Kyrena_Paymentmax.csv
+- app/locale/it_IT/Kyrena_Paymentmax.csv
+- app/locale/ja_JP/Kyrena_Paymentmax.csv
+- app/locale/nl_NL/Kyrena_Paymentmax.csv
+- app/locale/pl_PL/Kyrena_Paymentmax.csv
+- app/locale/pt_BR/Kyrena_Paymentmax.csv
+- app/locale/pt_PT/Kyrena_Paymentmax.csv
+- app/locale/ro_RO/Kyrena_Paymentmax.csv
+- app/locale/ru_RU/Kyrena_Paymentmax.csv
+- app/locale/sk_SK/Kyrena_Paymentmax.csv
+- app/locale/uk_UA/Kyrena_Paymentmax.csv
+- app/etc/modules/Kyrena_Paymentmax.xml
+- app/code/community/Kyrena/Paymentmax/
+- app/design/adminhtml/default/default/template/kyrena/paymentmax/
+- app/design/frontend/base/default/template/kyrena/paymentmax/
+- skin/adminhtml/default/default/images/kyrena/paymentmax
+- skin/frontend/base/default/images/kyrena/paymentmax/
+
+
+If you like, take some of your time to improve the translations, go to https://bit.ly/2HyCCEc
+
+
+Files: /skin/*/*/default/images/kyrena/paymentmax/ic-logo-*.svg
+License: These logos are the graphic representation of registered trademarks subject to trademark law.

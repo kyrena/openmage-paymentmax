@@ -1,0 +1,385 @@
+<?php
+/**
+ * Created J/02/12/2021
+ * Updated S/24/09/2022
+ *
+ * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2021-2022 | Mickaël Vang <mickael~cellublue~com>
+ * https://github.com/kyrena/openmage-paymentmax
+ *
+ * This program is free software, you can redistribute it or modify
+ * it under the terms of the GNU General Public License (GPL) as published
+ * by the free software foundation, either version 2 of the license, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but without any warranty, without even the implied warranty of
+ * merchantability or fitness for a particular purpose. See the
+ * GNU General Public License (GPL) for more details.
+ */
+
+$locale = substr(Mage::getSingleton('core/locale')->getLocale(), 0, 2);
+$action = $this->getData('action');
+if (!str_contains($action, '://'))
+	$action = $this->getUrl($action);
+
+?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="<?php echo $locale ?>" xml:lang="<?php echo $locale ?>">
+<head>
+	<title><?php echo Mage::getStoreConfig('general/store_information/name') ?> Blik</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="Content-Script-Type" content="text/javascript" />
+	<meta http-equiv="Content-Style-Type" content="text/css" />
+	<meta http-equiv="Content-Language" content="<?php echo $locale ?>" />
+	<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=0" />
+	<meta name="robots" content="noindex" />
+	<link rel="icon" type="image/x-icon" href="<?php echo Mage::getBaseUrl('web') ?>favicon.ico" />
+	<link rel="preload" href="<?php echo $this->getSkinUrl('images/loader-blue-small.gif') ?>" as="image" />
+	<script type="text/javascript">//<![CDATA[
+	function addTpayFocus() {
+		self.setTimeout(function () { document.querySelector('input').focus(); }, 50);
+	}
+	function onTpayPaste(ev) {
+		var values = ev.clipboardData.getData('text').trim();
+		if (!/\d{6}/.test(values))
+			return ev.preventDefault();
+		values = values.toString().split('');
+		document.querySelectorAll('input.otp').forEach(function (elem, idx) {
+			elem.value = values[idx];
+			if (idx == 5)
+				self.setTimeout(function () { elem.focus(); }, 12);
+		});
+	}
+	function onTpayInput(ev, i) {
+		if ((ev.target.value.length > 0) && (i < 6))
+			document.getElementById('otp' + (i + 1)).focus();
+	}
+	function onTpayKeydown(ev, i) {
+		// focus précédent
+		if ((ev.target.value.length < 1) && (ev.keyCode == 8) && (i > 1))
+			document.getElementById('otp' + (i - 1)).focus();
+		// coller avec ctrl+v
+		if ((ev.keyCode == 86) && (ev.ctrlKey || ev.metaKey))
+			onTpayPaste(ev);
+		// autorise uniquement retour arrière, tab, entrée, suppr, 0..9, ctrl+r
+		else if ((ev.keyCode != 8) && (ev.keyCode != 9) && (ev.keyCode != 13) && (ev.keyCode != 46) && !/\d/.test(ev.key) && ((ev.keyCode != 17) && !ev.ctrlKey && !ev.metaKey))
+			return ev.preventDefault();
+	}
+	function onTpaySubmit() {
+		document.querySelector('body').classList.add('load');
+		document.querySelector('button').setAttribute('disabled', 'disabled');
+	}
+	//]]></script>
+	<style type="text/css">
+	@font-face {
+		font-family:Larsseit;
+		src:url("<?php echo $this->getSkinUrl('webFonts/Larsseit-Regular/font.woff2') ?>") format("woff2"),
+			url("<?php echo $this->getSkinUrl('webFonts/Larsseit-Regular/font.woff') ?>") format("woff");
+		font-weight:400;
+		font-display:swap;
+	}
+	@font-face {
+		font-family:Larsseit;
+		src:url("<?php echo $this->getSkinUrl('webFonts/Larsseit-Bold/font.woff2') ?>") format("woff2"),
+			url("<?php echo $this->getSkinUrl('webFonts/Larsseit-Bold/font.woff2') ?>") format("woff");
+		font-weight:700;
+		font-display:swap;
+	}
+	html, body {
+		margin:0;
+		padding:0;
+		min-height:100%;
+		font-size:16px;
+		font-family:Larsseit, sans-serif;
+		user-select:none; -moz-user-select:none; -ms-user-select:none; -webkit-user-select:none;
+		scrollbar-color:#2852C6 #0C2653;
+	}
+	* {
+		box-sizing:border-box;
+		-moz-box-sizing:border-box;
+	}
+	img {
+		max-width:100%;
+		display:block;
+	}
+	a, button, label {
+		cursor:pointer;
+	}
+	body {
+		background:linear-gradient(45deg, #2852C6, #0C2653) #0C2653 no-repeat;
+		-webkit-tap-highlight-color:rgba(0,0,0,0);
+	}
+	body.load, body.load .valid-btn, body.load input {
+		cursor:wait;
+	}
+	body.load .cancel-btn {
+		visibility:hidden;
+	}
+	body.load .valid-btn {
+		background:linear-gradient(
+			120deg,
+			rgba(255,255,255,0.25) 0%,
+			rgba(255,255,255,0.25) 100%
+		);
+		color:#FFF;
+	}
+	body.load .valid-btn .default {
+		display:none;
+	}
+	body.load .valid-btn .processing {
+		display:inline;
+	}
+	body.load .valid-btn::after,
+	#wait::after {
+		content:"";
+		display:inline-flex;
+		justify-content:center;
+		align-items:center;
+		width:32px;
+		height:32px;
+		background:url("<?php echo $this->getSkinUrl('images/loader-blue-small.gif') ?>") center center #FFF no-repeat;
+		background-size:20px auto;
+		border-radius:6px;
+		box-shadow:0 4px 8px rgba(0,0,0,0.25);
+		position:absolute;
+		top:50%;
+		right:-40px;
+		transform:translate(0,-50%);
+		-webkit-transform:translate(0,-50%);
+	}
+	.container {
+		width:100%;
+		margin:0 auto;
+		padding:0 16px;
+	}
+	.page {
+		min-height:100vh;
+		color:#FFF;
+		display:flex;
+		justify-content:center;
+		align-items:center;
+	}
+	.content h1 {
+		font-size:56px;
+		margin:0 0 24px;
+	}
+	.content p {
+		position:relative;
+		margin:0;
+	}
+	.content p:not(:last-of-type) {
+		margin-bottom:16px;
+	}
+	.numbers {
+		margin:16px 0;
+	}
+	.numbers input {
+		width:44px;
+		height:56px;
+		border-radius:8px;
+		background-color:rgba(255,255,255,0.15);
+		border:2px solid #FFF;
+		text-align:center;
+		font-size:20px;
+		color:#FFF;
+		caret-color:#FFF;
+		transition:all 0.2s ease-in-out;
+	}
+	.numbers input:focus {
+		outline:none;
+		background-color:rgba(255,255,255,0.35);
+	}
+	.numbers input:not(:last-of-type) {
+		margin-right:12px;
+	}
+	.content form > p {
+		margin:8px 0;
+		padding:4px  8px;
+		border-radius:4px;
+		font-size:16px;
+		color:#FFF;
+		background-color:rgba(255,255,255,0.35);
+	}
+	#link a {
+		color:#FFF;
+	}
+	.set-buttons {
+		margin-top:24px;
+		display:flex;
+		justify-content:space-between;
+		align-items:center;
+	}
+	.valid-btn {
+		appearance:none;
+		-moz-appearance:none;
+		-webkit-appearance:none;
+		display:inline-flex;
+		justify-content:center;
+		align-items:center;
+		padding:8px 16px;
+		min-width:200px;
+		height:48px;
+		border-radius:8px;
+		background:linear-gradient(
+			120deg,
+			#6D8EEA 0%,
+			#C0DBFF 50%,
+			#C0DBFF 50%,
+			#C0DBFF 100%
+		) #C0DBFF 100% 0;
+		background-size:200% 100%;
+		transition:background-position 0.2s ease-in-out;
+		border:none;
+		font-family:Larsseit, sans-serif;
+		color:#0a2346;
+		font-size:16px;
+		font-weight:700;
+		text-transform:uppercase;
+		letter-spacing:1px;
+		box-shadow:0 4px 12px rgba(0,0,0,0.15);
+		position:relative;
+	}
+	.valid-btn .processing {
+		display:none;
+	}
+	.valid-btn:focus, .valid-btn:active {
+		background-position:0 0;
+	}
+	.cancel-btn {
+		display:inline-flex;
+		justify-content:center;
+		align-items:center;
+		height:48px;
+		color:#FFF;
+	}
+	@media screen and (min-width:1441px) {
+		.container {
+			max-width:1440px;
+		}
+	}
+	@media screen and (min-width:1200px) {
+		.container {
+			max-width:1140px;
+		}
+		.valid-btn:hover {
+			background-position:0 0;
+		}
+	}
+	@media screen and (min-width:992px) {
+		.container {
+			max-width:960px;
+			padding:0;
+		}
+		.img {
+			margin-right:40px;
+		}
+		.content p {
+			font-size:18px;
+			font-weight:400;
+		}
+	}
+	@media screen and (max-width:767px) {
+		.page {
+			flex-direction:column;
+		}
+		.img {
+			height:33vh;
+		}
+		.img img {
+			max-width:initial;
+			height:100%;
+		}
+		.content {
+			text-align:center;
+		}
+		.set-buttons {
+			flex-direction:column;
+			margin:0;
+			padding:16px 0;
+		}
+		.cancel-btn {
+			margin-top:24px;
+			padding:0 24px;
+		}
+	}
+	@media screen and (max-width:576px) {
+		.content h1 {
+			font-size:32px;
+			margin:0 0 16px;
+		}
+		.numbers {
+			display:flex;
+			justify-content:center;
+			align-items:center;
+		}
+		.numbers input {
+			flex:1 1 calc((100% / 6) - 8px);
+			max-width:48px;
+		}
+		.numbers input:not(:last-of-type) {
+			margin-right:8px;
+		}
+		.valid-btn {
+			height:44px;
+		}
+	}
+	@media screen and (max-width:360px) {
+		.img {
+			height:25vh;
+		}
+	}
+	</style>
+</head>
+<body style="visibility:hidden;" onload="document.querySelector('body').removeAttribute('style');">
+	<div class="container">
+		<div class="page">
+			<div class="col img">
+				<img src="<?php echo $this->getSkinUrl('images/checkout/tpayblik-iphone.png') ?>" srcset="<?php echo $this->getSkinUrl('images/checkout/tpayblik-iphone-2x.png') ?> 2x" alt="" />
+			</div>
+			<div class="col content">
+				<h1>BLIK</h1>
+				<?php // page de saisie du code //////////////////////////////////////// ?>
+				<?php if (empty($this->getData('valid'))): ?>
+					<form action="<?php echo $action ?>" method="post" onsubmit="onTpaySubmit();">
+						<p>Niepoprawny lub niekatulany kod BLIK, podaj nowy kod:</p>
+						<div class="numbers">
+							<?php foreach (range(1, 6) as $i): ?>
+								<input type="tel" name="otp[]" size="2" maxlength="1" autocomplete="off"
+									class="otp" id="otp<?php echo $i ?>"
+									required="required"
+									onpaste="onTpayPaste(event);"
+									oninput="onTpayInput(event, <?php echo $i ?>);"
+									onkeydown="onTpayKeydown(event, <?php echo $i ?>);"
+									onfocus="this.select();"
+									pattern="\d{1}" />
+							<?php endforeach ?>
+						</div>
+						<div class="set-buttons">
+							<button type="submit" class="valid-btn">
+								<span class="default">Zapłać</span>
+								<span class="processing"><?php echo $this->__('Processing') ?></span>
+							</button>
+							<a href="<?php echo $this->getUrl('*/*/cancel') ?>" onsubmit="onTpaySubmit();" class="cancel-btn"><?php echo $this->__('Cancel') ?></a>
+						</div>
+					</form>
+					<script type="text/javascript">self.addEventListener('load', addTpayFocus);</script>
+				<?php // page d'attente //////////////////////////////////////////////// ?>
+				<?php else: ?>
+					<p id="wait">Poczekaj, przetwarzamy Twoją płatność...</p>
+					<p id="link" style="visibility:hidden;">Jeśli trwa to zbyt długo, <a href="<?php echo $action ?>">kliknij tutaj</a>.</p>
+					<script type="text/javascript">
+					<?php if (empty($this->getData('fast'))): // attend un peu que tpay traite le paiement ?>
+						self.setTimeout(function () { self.location.href = "<?php echo $action ?>"; }, 2500);
+					<?php else: // redirige tout de suite ?>
+						self.addEventListener('load', function () {
+							self.setTimeout(function () { self.location.href = "<?php echo $action ?>"; }, 100);
+						});
+					<?php endif ?>
+					self.setTimeout(function () { document.getElementById('link').removeAttribute('style'); }, 8000);
+					</script>
+				<?php endif ?>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

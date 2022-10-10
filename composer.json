@@ -1,0 +1,77 @@
+{
+    "type": "magento-module",
+    "name": "kyrena/openmage-paymentmax",
+    "description": "A module to add new payment methods for OpenMage.",
+    "keywords": ["openmage", "openmage-module"],
+    "homepage": "https://github.com/kyrena/openmage-paymentmax",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Fabrice Creuzot",
+            "email": "fabrice@cellublue.com"
+        },
+        {
+            "name": "Jérôme Siau",
+            "email": "jerome@cellublue.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/kyrena/openmage-paymentmax/issues",
+        "docs": "https://github.com/kyrena/openmage-paymentmax"
+    },
+    "require": {
+        "php": ">=7.2.0",
+        "openmage/magento-lts": ">=19.4.0",
+        "symfony/polyfill-php80": "*",
+        "ext-mbstring": "*",
+        "ext-json": "*",
+        "ext-curl": "*",
+        "ext-bcmath": "*"
+    },
+    "replace": {
+        "luigifab/openmage-paypalrefund": "*"
+    },
+    "suggest": {
+        "kyrena/openmage-shippingmax": "*"
+    },
+    "minimum-stability": "dev",
+    "extra": {
+        "map": [
+            ["src/app/locale/cs_CZ/Kyrena_Paymentmax.csv", "app/locale/cs_CZ/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/de_AT/Kyrena_Paymentmax.csv", "app/locale/de_AT/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/de_CH/Kyrena_Paymentmax.csv", "app/locale/de_CH/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/de_DE/Kyrena_Paymentmax.csv", "app/locale/de_DE/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/el_GR/Kyrena_Paymentmax.csv", "app/locale/el_GR/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/es_AR/Kyrena_Paymentmax.csv", "app/locale/es_AR/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/es_CL/Kyrena_Paymentmax.csv", "app/locale/es_CL/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/es_CO/Kyrena_Paymentmax.csv", "app/locale/es_CO/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/es_CR/Kyrena_Paymentmax.csv", "app/locale/es_CR/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/es_ES/Kyrena_Paymentmax.csv", "app/locale/es_ES/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/es_MX/Kyrena_Paymentmax.csv", "app/locale/es_MX/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/es_PA/Kyrena_Paymentmax.csv", "app/locale/es_PA/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/es_PE/Kyrena_Paymentmax.csv", "app/locale/es_PE/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/es_VE/Kyrena_Paymentmax.csv", "app/locale/es_VE/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/fr_CA/Kyrena_Paymentmax.csv", "app/locale/fr_CA/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/fr_CH/Kyrena_Paymentmax.csv", "app/locale/fr_CH/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/fr_FR/Kyrena_Paymentmax.csv", "app/locale/fr_FR/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/hu_HU/Kyrena_Paymentmax.csv", "app/locale/hu_HU/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/it_CH/Kyrena_Paymentmax.csv", "app/locale/it_CH/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/it_IT/Kyrena_Paymentmax.csv", "app/locale/it_IT/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/ja_JP/Kyrena_Paymentmax.csv", "app/locale/ja_JP/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/nl_NL/Kyrena_Paymentmax.csv", "app/locale/nl_NL/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/pl_PL/Kyrena_Paymentmax.csv", "app/locale/pl_PL/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/pt_BR/Kyrena_Paymentmax.csv", "app/locale/pt_BR/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/pt_PT/Kyrena_Paymentmax.csv", "app/locale/pt_PT/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/ro_RO/Kyrena_Paymentmax.csv", "app/locale/ro_RO/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/ru_RU/Kyrena_Paymentmax.csv", "app/locale/ru_RU/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/sk_SK/Kyrena_Paymentmax.csv", "app/locale/sk_SK/Kyrena_Paymentmax.csv"],
+            ["src/app/locale/uk_UA/Kyrena_Paymentmax.csv", "app/locale/uk_UA/Kyrena_Paymentmax.csv"],
+            ["src/app/etc/modules/Kyrena_Paymentmax.xml", "app/etc/modules/Kyrena_Paymentmax.xml"],
+            ["src/app/code/community/Kyrena/Paymentmax/", "app/code/community/Kyrena/Paymentmax/"],
+            ["src/app/design/adminhtml/default/default/template/kyrena/paymentmax/", "app/design/adminhtml/default/default/template/kyrena/paymentmax/"],
+            ["src/app/design/frontend/base/default/template/kyrena/paymentmax/", "app/design/frontend/base/default/template/kyrena/paymentmax/"],
+            ["src/skin/adminhtml/default/default/images/kyrena/paymentmax", "skin/adminhtml/default/default/images/kyrena/paymentmax"],
+            ["src/skin/frontend/base/default/images/kyrena/paymentmax/", "skin/frontend/base/default/images/kyrena/paymentmax/"]
+        ]
+    }
+}

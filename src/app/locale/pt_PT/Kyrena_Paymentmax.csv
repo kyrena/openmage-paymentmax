@@ -1,0 +1,8 @@
+"Signature","Assinatura"
+"INCOMPLETE MODULE INSTALLATION","INSTALACAO INCOMPLETA DO MODULO"
+"There is conflict (<em>%s</em>).","Há um conflicto (<em lang=""en"">%s</em>)."
+"You will be redirected to payment page after submitting order.","Você será redirecionada para a página de pagamento após a confirmação do pedido."
+"Impossible to issue a refund transaction because the capture transaction does not exist.","Não é possível efetuar um reembolso porque a transação cativa não existe."
+"Refund completed by %s (%s).","Reembolso efetuado por %s (%s)."
+"Payment canceled.","Pagamento cancelado."
+"Payment refused.","Pagamento recusado."
