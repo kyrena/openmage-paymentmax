@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated V/30/09/2022
+ * Updated J/03/11/2022
  *
  * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -126,7 +126,7 @@ class Kyrena_Paymentmax_Model_Observer {
 
 					try {
 						$method = $order->getPayment()->getData('method');
-						$payed  = $order->getPayment()->getMethodInstance()->getTransaction(true);
+						$payed  = $order->getPayment()->getMethodInstance()->askTransaction(true);
 
 						if ($payed !== false) {
 							$msg[] = $order->getData('increment_id').' ; '.$order->getData('created_at').' ; '.

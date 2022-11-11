@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/12/11/2021
- * Updated J/11/08/2022
+ * Updated J/03/11/2022
  *
  * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -25,8 +25,6 @@ class Kyrena_Paymentmax_TpayblikController extends Kyrena_Paymentmax_PaymentmaxC
 	protected $_code = 'paymentmax_tpayblik';
 
 	public function waitingAction() {
-
-		Mage::register('turpentine_nocache_flag', true, true);
 
 		$session = Mage::getSingleton('checkout/session');
 		if (empty($id = $session->getLastOrderId())) {

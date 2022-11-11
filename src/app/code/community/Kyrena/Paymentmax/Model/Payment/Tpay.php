@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/12/11/2021
- * Updated M/30/08/2022
+ * Updated J/03/11/2022
  *
  * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -22,16 +22,16 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 
 	protected $_code          = 'paymentmax_tpay';
 	protected $_formBlockType = 'paymentmax/payment_tpay';
-	protected static $_codes  = ['paymentmax_tpay', 'paymentmax_tpayblik', 'paymentmax_tpaycard', 'paymentmax_tpayggpay', 'tpay', 'tpayCards'];
-	protected static $_allcnf = ['paymentmax_tpay', 'paymentmax_tpayblik', 'paymentmax_tpaycard', 'paymentmax_tpayggpay']; // allowed configuration
-	protected static $_cache  = []; // transactions list
-	protected static $_allowedCountries  = ['AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK']; // europe
-	protected static $_allowedCurrencies = ['PLN'];
+	protected $_codes  = ['paymentmax_tpay', 'paymentmax_tpayblik', 'paymentmax_tpaycard', 'paymentmax_tpayggpay', 'tpay', 'tpayCards'];
+	protected $_allcnf = ['paymentmax_tpay', 'paymentmax_tpayblik', 'paymentmax_tpaycard', 'paymentmax_tpayggpay']; // allowed configuration
+	protected $_cache  = []; // transactions list
+	protected $_allowedCountries  = ['AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK']; // europe
+	protected $_allowedCurrencies = ['PLN'];
 
 
 	// openmage
 	public function getCode() {
-		return in_array($this->_code, self::$_allcnf) ? $this->_code : 'paymentmax_tpay';
+		return in_array($this->_code, $this->_allcnf) ? $this->_code : 'paymentmax_tpay';
 	}
 
 	public function assignData($data) {
@@ -104,7 +104,15 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 		$_SERVER['debug_tpay_method']  = $method;
 		$_SERVER['debug_tpay_request'] = $params;
 
-		$response = $client->{$method}(...$params);
+		try {
+			// en 2 temps pour
+			// Unexpected response from tpay server 0 in file vendor/tpay-com/tpay-php/tpayLibs/src/_class_tpay/Curl/Curl.php
+			$response = $client->{$method}(...$params);
+		}
+		catch (Throwable $t) {
+			sleep(3);
+			$response = $client->{$method}(...$params);
+		}
 
 		// sentry
 		$_SERVER['debug_tpay_response'] = $response;
@@ -139,16 +147,10 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 		];
 	}
 
-	public function redirectToPayment() {
+	protected function askRedirect(object $order) {
 
-		$order   = $this->getInfoInstance()->getOrder();
 		$storeId = $order->getStoreId();
 		$blik    = ($this->_code == 'paymentmax_tpayblik') ? $order->getPayment()->getData('po_number') : null;
-
-		// si la commande est déjà payée
-		if ($order->getTotalDue() <= 0.01)
-			return Mage::getSingleton('checkout/session')->getLastSuccessQuoteId() ?
-				Mage::getUrl('checkout/onepage/success') : Mage::getUrl('sales/order/view', ['order_id' => $order->getId()]);
 
 		// https://docs.tpay.com/#!/Transaction_API/post_api_gw_api_key_transaction_create
 		// https://secure.tpay.com/groups-{idtpay}0.js
@@ -162,7 +164,7 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 			'return_error_url' => $this->getOrderReturnUrl(['error' => 1]),
 			'email'       => $order->getData('customer_email'),
 			'name'        => $order->getData('customer_firstname').' '.$order->getData('customer_lastname'),
-			'city'        => $billing->getData('city'),
+			'city'        => mb_substr($billing->getData('city'), 0, 32),
 			'zip'         => $billing->getData('postcode'),
 			'country'     => $billing->getData('country_id'),
 			'group'       => ($this->_code == 'paymentmax_tpayggpay') ? 166 : (empty($blik) ? 103 : 150), // tpayggpay : tpay,tpaycard : tpayblik
@@ -195,8 +197,8 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 
 	// retourne les données de la transaction
 	// demande via le numéro de transaction enregistré par redirectToPayment, sinon fait une recherche par date
-	// si on fait une recherche retourne false si la commande n'est pas payée, sinon retourne l'id de la transaction et son statut (chargeback/paid)
-	public function getTransaction(bool $search = false) {
+	// si on fait une recherche retourne false si la commande n'est pas payée, sinon retourne l'id de la transaction et son statut
+	public function askTransaction(bool $search = false) {
 
 		$order     = $this->getInfoInstance()->getOrder();
 		$payment   = $order->getPayment();
@@ -220,14 +222,14 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 
 				$ckey = date('Ymd', $time).'-'.$this->getConfigData('api_merchant', $order->getStoreId());
 
-				if (empty(self::$_cache[$ckey])) {
-					self::$_cache[$ckey] = $this->callApi('report', 'report', [
+				if (empty($this->_cache[$ckey])) {
+					$this->_cache[$ckey] = $this->callApi('report', 'report', [
 						date('Y-m-d', $time - 3600), // -1h
 						date('Y-m-d', min($time + 86400, strtotime('23:59:59'))), // +24h ou aujourd'hui 23h59
 					], $order->getStoreId());
 				}
 
-				$lines = mb_substr(self::$_cache[$ckey]['report'], mb_stripos(self::$_cache[$ckey]['report'], 'LP;ID'));
+				$lines = mb_substr($this->_cache[$ckey]['report'], mb_stripos($this->_cache[$ckey]['report'], 'LP;ID'));
 				$heads = [];
 				$data  = [];
 
@@ -308,7 +310,9 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 				'amount_paid' => (float) $post['tr_paid'],
 			];
 
-			if ($response['status'] == 'TRUE')
+			if (($response['status'] == 'FALSE') && ($response['error_code'] == 'overpay'))
+				$response['status'] = 'paid';
+			else if ($response['status'] == 'TRUE')
 				$response['status'] = 'correct';
 			else if ($response['status'] == 'PAID')
 				$response['status'] = 'paid';
@@ -321,21 +325,24 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 			$response = ['id' => 0, 'amount' => 0, 'amount_paid' => 0, 'status' => 'error', 'err' => 'canceled by user'];
 		}
 		else {
-			$response = $this->getTransaction($check);
+			$response = $this->askTransaction($check);
 		}
 
 		// sentry
 		$_SERVER['debug_tpay_response'] = $response;
 
 		$captureId = $response['id'];
-		if ($blik && ($response['status'] == 'pending'))
+		if (empty($response['status']))
+			return 'waiting';
+		$status = $response['status'];
+		if ($blik && ($status == 'pending'))
 			return 'waiting';
 
 		// paiement remboursé
 		// essaye de rembourser la commande
-		if ($response['status'] == 'chargeback') {
+		if ($status == 'chargeback') {
 
-			$this->refundFromIpn($order, $isHolded,
+			$this->refundOrder($order, $isHolded,
 				$response['amount'],
 				'PLN',
 				$captureId,
@@ -351,7 +358,7 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 
 		// paiement validé
 		// essaye de facturer la commande
-		if (($response['amount_paid'] > 0) && ($response['amount'] == $response['amount_paid']) && in_array($response['status'], ['correct', 'paid'])) {
+		if (($response['amount_paid'] > 0) && ($response['amount_paid'] >= $response['amount']) && in_array($status, ['correct', 'paid'])) {
 
 			$amount = $response['amount_paid'].' PLN';
 			if ($order->getInvoiceCollection()->getSize() > 0) {
@@ -388,6 +395,12 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 				$order->sendNewOrderEmail(true, '')->save();
 				if (is_object($payment->getCreatedInvoice()))
 					$payment->getCreatedInvoice()->sendEmail(true, '')->save();
+
+				if ($response['error_code'] == 'overpay') {
+					if ($order->canHold())
+						$order->hold()->save();
+					$order->addStatusHistoryComment($this->getCommonMessage($ipn, $captureId).' Overpaid! tr_amount='.$response['amount'].' tr_paid='.$response['amount_paid'])->save();
+				}
 			}
 			else {
 				$order->addStatusHistoryComment($this->getCommonMessage($ipn, $captureId).' Payment accepted ('.$amount.'). Order is not invoicable.')->save();
@@ -400,8 +413,8 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 		}
 
  		// paiement refusé ou annulé
-		// essayer d'annuler la commande
-		if (($response['status'] == 'pending') || ($response['status'] == 'error')) {
+		// essaye d'annuler la commande
+		if (in_array($status, ['pending', 'error'])) {
 
 			if ($order->isCanceled()) {
 				$order->addStatusHistoryComment($this->getCommonMessage($ipn, $captureId).' Payment canceled by user. Order is already canceled.')->save();
@@ -461,7 +474,7 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 		if (isset($post['tr_crc'], $post['tr_desc'])) {
 			$order   = Mage::getModel('sales/order')->load($post['tr_crc']);
 			$payment = $order->getPayment();
-			if (($order->getData('increment_id') == $post['tr_desc']) && in_array($payment->getData('method'), self::$_codes))
+			if (($order->getData('increment_id') == $post['tr_desc']) && in_array($payment->getData('method'), $this->_codes))
 				return $payment->getMethodInstance()->validatePayment($post, true);
 		}
 
@@ -473,7 +486,7 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 			foreach ($transactions as $transaction) {
 				$order   = Mage::getModel('sales/order')->load($transaction->getData('order_id'));
 				$payment = $order->getPayment();
-				if (in_array($payment->getData('method'), self::$_codes))
+				if (in_array($payment->getData('method'), $this->_codes))
 					return $payment->getMethodInstance()->validatePayment($post, true);
 			}
 		}

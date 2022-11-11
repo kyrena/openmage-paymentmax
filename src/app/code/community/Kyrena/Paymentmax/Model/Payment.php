@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated J/29/09/2022
+ * Updated J/03/11/2022
  *
  * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -73,15 +73,15 @@ abstract class Kyrena_Paymentmax_Model_Payment extends Mage_Payment_Model_Method
 
 	public function getConfigData($field, $storeId = null) {
 
-		if (isset(static::$_allcnf))
-			return (($field == 'active') && !in_array($this->_code, static::$_allcnf)) ? false : parent::getConfigData($field, $storeId);
+		if (isset($this->_allcnf))
+			return (($field == 'active') && !in_array($this->_code, $this->_allcnf)) ? false : parent::getConfigData($field, $storeId);
 
 		return parent::getConfigData($field, $storeId);
 	}
 
 	public function canUseForCountry($country, $list = false) {
 
-		$countries = static::$_allowedCountries ?? Mage::getResourceModel('directory/country_collection')->getColumnValues('country_id');
+		$countries = $this->_allowedCountries ?? Mage::getResourceModel('directory/country_collection')->getColumnValues('country_id');
 		if ($list)
 			return $countries;
 
@@ -102,7 +102,7 @@ abstract class Kyrena_Paymentmax_Model_Payment extends Mage_Payment_Model_Method
 		if ($this->getConfigFlag('allow_current_currency') && (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[1]['function'] == 'isApplicableToQuote'))
 			$code = Mage::app()->getStore()->getCurrentCurrency()->getCode();
 
-		return in_array($code, static::$_allowedCurrencies);
+		return in_array($code, $this->_allowedCurrencies);
 	}
 
 	public function getOrderPlaceRedirectUrl() {
@@ -111,15 +111,15 @@ abstract class Kyrena_Paymentmax_Model_Payment extends Mage_Payment_Model_Method
 
 	// kyrena
 	public function getAllCodes() {
-		return static::$_codes ?? [$this->_code];
+		return $this->_codes ?? [$this->_code];
 	}
 
 	public function getAllowedCountries() {
-		return static::$_allowedCountries;
+		return $this->_allowedCountries;
 	}
 
 	public function getAllowedCurrencies() {
-		return static::$_allowedCurrencies;
+		return $this->_allowedCurrencies;
 	}
 
 	public function getOrderWaitingUrl(array $params = []) {
@@ -143,7 +143,19 @@ abstract class Kyrena_Paymentmax_Model_Payment extends Mage_Payment_Model_Method
 		return Mage::getStoreConfigFlag($path, $storeId);
 	}
 
-	protected function refundFromIpn(object $order, bool $isHolded, float $amount, string $currency, string $captureId, string $refundId, array $info = []) {
+	public function redirectToPayment() {
+
+		$order = $this->getInfoInstance()->getOrder();
+
+		// si la commande est déjà payée
+		if ($order->getTotalDue() <= 0.01)
+			return Mage::getSingleton('checkout/session')->getLastSuccessQuoteId() ?
+				Mage::getUrl('checkout/onepage/success') : Mage::getUrl('sales/order/view', ['order_id' => $order->getId()]);
+
+		return $this->askRedirect($order);
+	}
+
+	protected function refundOrder(object $order, bool $isHolded, float $amount, string $currency, string $captureId, string $refundId, array $info = []) {
 
 		$found   = false;
 		$amount  = (float) abs($amount);

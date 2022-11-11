@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated S/24/09/2022
+ * Updated J/03/11/2022
  *
  * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -22,22 +22,22 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 
 	protected $_code          = 'paymentmax_paypal';
 	protected $_formBlockType = 'paymentmax/payment_paypal';
-	protected static $_codes  = ['paymentmax_paypal', 'paymentmax_paypalcheckout', 'paypal_billing_agreement', 'paypal_direct', 'paypal_express', 'paypal_express_bml', 'paypal_standard', 'paypal_wps_express', 'paypaluk_express', 'paypaluk_direct', 'verisign', 'hosted_pro', 'payflow_link', 'payflow_advanced'];
-	protected static $_allcnf = ['paymentmax_paypal', 'paymentmax_paypalcheckout']; // allowed configuration
-	protected static $_allowedCountries  = []; // canUseForCountry
-	protected static $_allowedCurrencies = []; // canUseForCurrency
+	protected $_codes  = ['paymentmax_paypal', 'paymentmax_paypalcheckout', 'paypal_billing_agreement', 'paypal_direct', 'paypal_express', 'paypal_express_bml', 'paypal_standard', 'paypal_wps_express', 'paypaluk_express', 'paypaluk_direct', 'verisign', 'hosted_pro', 'payflow_link', 'payflow_advanced'];
+	protected $_allcnf = ['paymentmax_paypal', 'paymentmax_paypalcheckout']; // allowed configuration
+	protected $_allowedCountries  = []; // canUseForCountry
+	protected $_allowedCurrencies = []; // canUseForCurrency
 
 
 	// openmage
 	public function getCode() {
-		return in_array($this->_code, self::$_allcnf) ? $this->_code : 'paymentmax_paypal';
+		return in_array($this->_code, $this->_allcnf) ? $this->_code : 'paymentmax_paypal';
 	}
 
 	public function canUseForCountry($country, $list = false) {
 
 		// copie de Magento 2 (https://github.com/OpenMage/magento-lts/pull/1805)
 		if ($this->_code != 'paymentmax_paypalcheckout') {
-			self::$_allowedCountries = [
+			$this->_allowedCountries = [
 				'AE',
 				'AR',
 				'AT',
@@ -116,7 +116,7 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 
 		// copie de Magento 2 (https://github.com/OpenMage/magento-lts/pull/1805)
 		if ($this->_code != 'paymentmax_paypalcheckout') {
-			self::$_allowedCurrencies = [
+			$this->_allowedCurrencies = [
 				'AUD',
 				'CAD',
 				'CZK',
@@ -147,61 +147,6 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 
 
 	// kyrena
-	protected function callApi(array $data, int $storeId = 0, bool $isTest = false, bool $check = true) {
-
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 20);
-
-		if (empty($data['url'])) {
-			$data['PWD']       = Mage::helper('core')->decrypt($this->getConfigData('api_password', $storeId));
-			$data['USER']      = Mage::helper('core')->decrypt($this->getConfigData('api_username', $storeId));
-			$data['SIGNATURE'] = Mage::helper('core')->decrypt($this->getConfigData('api_signature', $storeId));
-			$data['VERSION']   = 101;
-			curl_setopt($ch, CURLOPT_URL, $isTest ? 'https://api-3t.sandbox.paypal.com/nvp' : 'https://api-3t.paypal.com/nvp');
-			curl_setopt($ch, CURLOPT_POST, true);
-			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-		}
-		else {
-			curl_setopt($ch, CURLOPT_URL, $data['url']);
-			curl_setopt($ch, CURLOPT_HTTPGET, true);
-		}
-
-		$result = curl_exec($ch);
-		if (($result === false) || (curl_errno($ch) !== 0)) {
-			$result   = trim('CURL_ERROR '.curl_errno($ch).' '.curl_error($ch));
-			$response = $result;
-		}
-		else if (empty($data['url'])) {
-			mb_parse_str($result, $response);
-			if (empty($response['ACK']))
-				$response['ACK'] = 'Err';
-			if (empty($response['L_ERRORCODE0']))
-				$response['L_ERRORCODE0'] = 0;
-		}
-		else {
-			$response = $result;
-		}
-		curl_close($ch);
-
-		// sentry
-		unset($data['PWD'], $data['USER'], $data['SIGNATURE']);
-		$_SERVER['debug_paypal_request'] = $data;
-		$_SERVER['debug_paypal_response_raw'] = $result;
-		$_SERVER['debug_paypal_response_decoded'] = $response;
-		//echo '<pre>',print_r($_POST, true),print_r($data, true),print_r($response, true);exit;
-
-		if ($check && (!is_array($response) || ($response['ACK'] != 'Success')))
-			Mage::throwException(empty($response['L_ERRORCODE0']) ?
-				sprintf('Error with PayPal: %s', $response) :
-				sprintf('Error with PayPal: %s: %s %s', $response['L_ERRORCODE0'], str_replace(' See additional error messages for details.', '', $response['L_SHORTMESSAGE0']), $response['L_LONGMESSAGE0']));
-
-		return (array) $response;
-	}
-
 	protected function addAmountsToRequest(array $data, bool $isTest = false) {
 
 		$order = $this->getInfoInstance()->getOrder();
@@ -262,6 +207,61 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 		return $data;
 	}
 
+	protected function callApi(array $data, int $storeId = 0, bool $isTest = false, bool $check = true) {
+
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+
+		if (empty($data['url'])) {
+			$data['PWD']       = Mage::helper('core')->decrypt($this->getConfigData('api_password', $storeId));
+			$data['USER']      = Mage::helper('core')->decrypt($this->getConfigData('api_username', $storeId));
+			$data['SIGNATURE'] = Mage::helper('core')->decrypt($this->getConfigData('api_signature', $storeId));
+			$data['VERSION']   = 101;
+			curl_setopt($ch, CURLOPT_URL, $isTest ? 'https://api-3t.sandbox.paypal.com/nvp' : 'https://api-3t.paypal.com/nvp');
+			curl_setopt($ch, CURLOPT_POST, true);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+		}
+		else {
+			curl_setopt($ch, CURLOPT_URL, $data['url']);
+			curl_setopt($ch, CURLOPT_HTTPGET, true);
+		}
+
+		$result = curl_exec($ch);
+		if (($result === false) || (curl_errno($ch) !== 0)) {
+			$result   = trim('CURL_ERROR '.curl_errno($ch).' '.curl_error($ch));
+			$response = $result;
+		}
+		else if (empty($data['url'])) {
+			mb_parse_str($result, $response);
+			if (empty($response['ACK']))
+				$response['ACK'] = 'Err';
+			if (empty($response['L_ERRORCODE0']))
+				$response['L_ERRORCODE0'] = 0;
+		}
+		else {
+			$response = $result;
+		}
+		curl_close($ch);
+
+		// sentry
+		unset($data['PWD'], $data['USER'], $data['SIGNATURE']);
+		$_SERVER['debug_paypal_request'] = $data;
+		$_SERVER['debug_paypal_response_raw'] = $result;
+		$_SERVER['debug_paypal_response_decoded'] = $response;
+		//echo '<pre>',print_r($_POST, true),print_r($data, true),print_r($response, true);exit;
+
+		if ($check && (!is_array($response) || ($response['ACK'] != 'Success')))
+			Mage::throwException(empty($response['L_ERRORCODE0']) ?
+				sprintf('Error with PayPal: %s', $response) :
+				sprintf('Error with PayPal: %s: %s %s', $response['L_ERRORCODE0'], str_replace(' See additional error messages for details.', '', $response['L_SHORTMESSAGE0']), $response['L_LONGMESSAGE0']));
+
+		return (array) $response;
+	}
+
 	protected function askRefund(object $order, string $captureId, float $amount, bool $partial) {
 
 		$storeId = $order->getStoreId();
@@ -295,16 +295,10 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 		];
 	}
 
-	public function redirectToPayment() {
+	protected function askRedirect(object $order) {
 
-		$order   = $this->getInfoInstance()->getOrder();
 		$storeId = $order->getStoreId();
 		$isTest  = $this->getConfigFlag('api_sandbox', $storeId);
-
-		// si la commande est déjà payée
-		if ($order->getTotalDue() <= 0.01)
-			return Mage::getSingleton('checkout/session')->getLastSuccessQuoteId() ?
-				Mage::getUrl('checkout/onepage/success') : Mage::getUrl('sales/order/view', ['order_id' => $order->getId()]);
 
 		// https://developer.paypal.com/docs/nvp-soap-api/set-express-checkout-nvp/
 		$response = $this->callApi($this->addAmountsToRequest([
@@ -333,7 +327,7 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 	// retourne les données de la transaction
 	// demande via le numéro de transaction enregistré par redirectToPayment, sinon fait une recherche par date
 	// si on fait une recherche retourne false si la commande n'est pas payée, sinon retourne l'id de la transaction et son statut
-	public function getTransaction(bool $search = false) {
+	public function askTransaction(bool $search = false) {
 
 		$order     = $this->getInfoInstance()->getOrder();
 		$storeId   = $order->getStoreId();
@@ -483,7 +477,7 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 			// essaye de rembourser la commande
 			if ($refund) {
 
-				$this->refundFromIpn($order, $isHolded,
+				$this->refundOrder($order, $isHolded,
 					$response['PAYMENTINFO_0_AMT'],
 					$response['PAYMENTINFO_0_CURRENCYCODE'],
 					$response['PAYMENTINFO_0_PARENTTRANSACTIONID'],
@@ -713,7 +707,7 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 				// charge la commande
 				$order   = Mage::getModel('sales/order')->loadByIncrementId($post['invoice']);
 				$payment = $order->getPayment();
-				if (($order->getData('increment_id') == $post['invoice']) && in_array($payment->getData('method'), self::$_codes))
+				if (($order->getData('increment_id') == $post['invoice']) && in_array($payment->getData('method'), $this->_codes))
 					return $payment->getMethodInstance()->validatePayment($post, true);
 			}
 		}

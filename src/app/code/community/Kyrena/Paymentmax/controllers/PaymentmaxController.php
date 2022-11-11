@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated D/28/08/2022
+ * Updated J/03/11/2022
  *
  * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -20,13 +20,12 @@
 
 abstract class Kyrena_Paymentmax_PaymentmaxController extends Mage_Core_Controller_Front_Action {
 
-	public function waitingAction() {
-		$this->_forward('return');
+	public function preDispatch() {
+		Mage::register('turpentine_nocache_flag', true, true);
+		parent::preDispatch();
 	}
 
 	public function redirectAction() {
-
-		Mage::register('turpentine_nocache_flag', true, true);
 
 		$session = Mage::getSingleton('checkout/session');
 		if (empty($id = $session->getLastOrderId())) {
@@ -49,8 +48,6 @@ abstract class Kyrena_Paymentmax_PaymentmaxController extends Mage_Core_Controll
 	}
 
 	public function returnAction() {
-
-		Mage::register('turpentine_nocache_flag', true, true);
 
 		$session = Mage::getSingleton('checkout/session');
 		if (empty($id = $session->getLastOrderId())) {
@@ -90,8 +87,6 @@ abstract class Kyrena_Paymentmax_PaymentmaxController extends Mage_Core_Controll
 
 	public function cancelAction() {
 
-		Mage::register('turpentine_nocache_flag', true, true);
-
 		$session = Mage::getSingleton('checkout/session');
 		if (empty($id = $session->getLastOrderId())) {
 			$this->_redirect('checkout/cart');
@@ -117,8 +112,6 @@ abstract class Kyrena_Paymentmax_PaymentmaxController extends Mage_Core_Controll
 	}
 
 	public function ipnAction() {
-
-		Mage::register('turpentine_nocache_flag', true, true);
 
 		// body
 		$data = file_get_contents('php://input');

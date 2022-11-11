@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated V/20/05/2022
+ * Updated D/06/11/2022
  *
  * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -22,7 +22,7 @@ class Kyrena_Paymentmax_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block
 
 	public function render(Varien_Data_Form_Element_Abstract $element) {
 
-		if (stripos($element->getHtmlId(), 'openmage') !== false)
+		if (str_contains($element->getHtmlId(), 'openmage'))
 			return sprintf('<p class="box" style="margin-top:16px;">%s</p>', $element->getData('legend'));
 
 		$msg = $this->checkRewrites();

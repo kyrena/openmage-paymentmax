@@ -22,7 +22,7 @@ In **System / Configuration / Payment Methods / General**, you can _hide and cle
 
 ## Copyright and Credits
 
-- Current version: 1.0.0-beta (10/10/2022)
+- Current version: 1.0.1-beta (11/11/2022)
 - Compatibility: OpenMage 19.x / 20.x / 21.x, PHP 7.2 / 7.3 / 7.4 / 8.0 / 8.1
 - Client compatibility: Firefox 36+, Chrome 32+, Opera 19+, Edge 16+, Safari 9+
 - Translations: English (en), French (fr-FR/fr-CA), German (de), Italian (it), Portuguese (pt-PT/pt-BR), Spanish (es) / Chinese (zh), Czech (cs), Dutch (nl), Greek (el), Hungarian (hu), Japanese (ja), Polish (pl), Romanian (ro), Russian (ru), Slovak (sk), Turkish (tr), Ukrainian (uk)
@@ -47,7 +47,8 @@ rm -r skin/adminhtml/default/default/images/paypal*
 rm -f skin/frontend/rwd/default/scss/module/_paypal.scss
 ```
 ```sql
-DELETE FROM core_config_data WHERE path LIKE "payment/paypal%" OR path LIKE "paypal/%" OR path LIKE "paypalrefund/%";
+DELETE FROM core_config_data WHERE path LIKE "payment/paypal%"
+ OR path LIKE "paypal/%" OR path LIKE "paypalrefund/%";
 ```
 
 Then, with composer:

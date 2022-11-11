@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated M/30/08/2022
+ * Updated J/03/11/2022
  *
  * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -22,10 +22,10 @@ class Kyrena_Paymentmax_Model_Payment_Yookassa extends Kyrena_Paymentmax_Model_P
 
 	protected $_code          = 'paymentmax_yookassa';
 	protected $_formBlockType = 'paymentmax/payment_yookassa';
-	protected static $_codes  = ['paymentmax_yookassa', 'paymentmax_yookassaqiwi'];
-	protected static $_cache  = []; // transactions list
-	protected static $_allowedCountries  = ['RU'];
-	protected static $_allowedCurrencies = ['RUB'];
+	protected $_codes  = ['paymentmax_yookassa', 'paymentmax_yookassaqiwi'];
+	protected $_cache  = []; // transactions list
+	protected $_allowedCountries  = ['RU'];
+	protected $_allowedCurrencies = ['RUB'];
 
 
 	// kyrena
@@ -154,15 +154,9 @@ class Kyrena_Paymentmax_Model_Payment_Yookassa extends Kyrena_Paymentmax_Model_P
 		];
 	}
 
-	public function redirectToPayment() {
+	protected function askRedirect(object $order) {
 
-		$order   = $this->getInfoInstance()->getOrder();
 		$storeId = $order->getStoreId();
-
-		// si la commande est déjà payée
-		if ($order->getTotalDue() <= 0.01)
-			return Mage::getSingleton('checkout/session')->getLastSuccessQuoteId() ?
-				Mage::getUrl('checkout/onepage/success') : Mage::getUrl('sales/order/view', ['order_id' => $order->getId()]);
 
 		$ip = empty(getenv('HTTP_X_FORWARDED_FOR')) ? false : explode(',', getenv('HTTP_X_FORWARDED_FOR'));
 		$ip = empty($ip) ? getenv('REMOTE_ADDR') : reset($ip);
@@ -251,8 +245,8 @@ class Kyrena_Paymentmax_Model_Payment_Yookassa extends Kyrena_Paymentmax_Model_P
 
 	// retourne les données de la transaction
 	// demande via le numéro de transaction enregistré par redirectToPayment, sinon fait une recherche par date
-	// si on fait une recherche retourne false si la commande n'est pas payée, sinon retourne l'id de la transaction et son statut (chargeback/paid)
-	public function getTransaction(bool $search = false) {
+	// si on fait une recherche retourne false si la commande n'est pas payée, sinon retourne l'id de la transaction et son statut
+	public function askTransaction(bool $search = false) {
 
 		$order     = $this->getInfoInstance()->getOrder();
 		$payment   = $order->getPayment();
@@ -268,8 +262,8 @@ class Kyrena_Paymentmax_Model_Payment_Yookassa extends Kyrena_Paymentmax_Model_P
 				$time = strtotime($order->getData('created_at'));
 				$dkey = date('Ymd', $time).'-'.$this->getConfigData('api_username', $order->getStoreId()).'-'.$pnum;
 
-				if (empty(self::$_cache[$dkey])) {
-					self::$_cache[$dkey] = $this->callApi('getPayments', [[
+				if (empty($this->_cache[$dkey])) {
+					$this->_cache[$dkey] = $this->callApi('getPayments', [[
 						'created_at_gte' => date('c', $time - 3600),  // -1h
 						'created_at_lt'  => date('c', $time + 86400), // +24h
 						'limit'          => 100,
@@ -277,7 +271,7 @@ class Kyrena_Paymentmax_Model_Payment_Yookassa extends Kyrena_Paymentmax_Model_P
 					]], $order->getStoreId());
 				}
 
-				foreach (self::$_cache[$dkey]->getItems() as $payment) {
+				foreach ($this->_cache[$dkey]->getItems() as $payment) {
 
 					$data = method_exists($payment, 'getMetadata') ? $payment->getMetadata() : null;
 					$data = is_object($data) ? $data->toArray() : [];
@@ -290,7 +284,7 @@ class Kyrena_Paymentmax_Model_Payment_Yookassa extends Kyrena_Paymentmax_Model_P
 
 				$pnum++;
 			}
-			while ($page = self::$_cache[$dkey]->getNextCursor());
+			while ($page = $this->_cache[$dkey]->getNextCursor());
 		}
 
 		if (empty($captureId))
@@ -316,7 +310,7 @@ class Kyrena_Paymentmax_Model_Payment_Yookassa extends Kyrena_Paymentmax_Model_P
 		$order     = $this->getInfoInstance()->getOrder();
 		$isHolded  = $order->getStatus() == 'holded';
 		$payment   = $order->getPayment();
-		$response  = $this->getTransaction();
+		$response  = $this->askTransaction();
 		$captureId = $response->getId();
 
 		// sentry
@@ -335,7 +329,7 @@ class Kyrena_Paymentmax_Model_Payment_Yookassa extends Kyrena_Paymentmax_Model_P
 			sleep(2);
 			$order->load($order->getId());
 
-			$this->refundFromIpn($order, $isHolded,
+			$this->refundOrder($order, $isHolded,
 				$response->getRefundedAmount()->getValue(),
 				$response->getAmount()->getCurrency(),
 				$captureId,
@@ -501,7 +495,7 @@ class Kyrena_Paymentmax_Model_Payment_Yookassa extends Kyrena_Paymentmax_Model_P
 		if (isset($data['order_id'], $data['increment_id'])) {
 			$order   = Mage::getModel('sales/order')->load($data['order_id']);
 			$payment = $order->getPayment();
-			if (($order->getData('increment_id') == $data['increment_id']) && in_array($payment->getData('method'), self::$_codes))
+			if (($order->getData('increment_id') == $data['increment_id']) && in_array($payment->getData('method'), $this->_codes))
 				return $payment->getMethodInstance()->validatePayment($post, true);
 		}
 
@@ -513,7 +507,7 @@ class Kyrena_Paymentmax_Model_Payment_Yookassa extends Kyrena_Paymentmax_Model_P
 			foreach ($transactions as $transaction) {
 				$order   = Mage::getModel('sales/order')->load($transaction->getData('order_id'));
 				$payment = $order->getPayment();
-				if (in_array($payment->getData('method'), self::$_codes))
+				if (in_array($payment->getData('method'), $this->_codes))
 					return $payment->getMethodInstance()->validatePayment($post, true);
 			}
 		}
