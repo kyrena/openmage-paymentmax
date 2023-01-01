@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/21/05/2021
- * Updated M/05/07/2022
+ * Updated M/06/12/2022
  *
- * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
  * https://github.com/kyrena/openmage-paymentmax
  *
@@ -20,6 +20,8 @@
 
 class Kyrena_Paymentmax_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Block_System_Config_Form_Fieldset {
 
+	protected $_html;
+
 	public function render(Varien_Data_Form_Element_Abstract $element) {
 
 		// img.logo.paymentmax {
@@ -30,7 +32,7 @@ class Kyrena_Paymentmax_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Bl
 		$html = [];
 		$code = (string) str_replace('payment_', '', $element->getId()); // (yes)
 
-		if (stripos($code, 'paymentmax_') === false) {
+		if (!str_contains($code, 'paymentmax_')) {
 			$this->_html = null;
 			return parent::render($element);
 		}
@@ -112,15 +114,15 @@ class Kyrena_Paymentmax_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Bl
 
 		// drapeau utf8
 		$flag = '';
-		if (preg_match('#^[A-Z]{2} - #', $element->getData('legend')) === 1) {
-			$flag = substr($element->getData('legend'), 0, 2);
+		if (preg_match('#^[A-Z]{2} - #', $element->getLegend()) === 1) {
+			$flag = substr($element->getLegend(), 0, 2);
 			$flag = mb_convert_encoding('&#'.(127397 + ord($flag[0])).';', 'UTF-8', 'HTML-ENTITIES').
 				mb_convert_encoding('&#'.(127397 + ord($flag[1])).';', 'UTF-8', 'HTML-ENTITIES').
 				' &nbsp;';
 		}
 
 		// marquage
-		$element->setLegend($flag.$element->getData('legend').((in_array($defaultCountry, $selCountries) && Mage::getStoreConfigFlag('payment/'.$code.'/active', $storeId)) ? ' *' : ''));
+		$element->setLegend($flag.$element->getLegend().((in_array($defaultCountry, $selCountries) && Mage::getStoreConfigFlag('payment/'.$code.'/active', $storeId)) ? ' *' : ''));
 
 		return parent::render($element);
 	}

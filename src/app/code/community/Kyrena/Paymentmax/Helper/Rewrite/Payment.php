@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated M/26/07/2022
+ * Updated L/14/11/2022
  *
- * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
  * https://github.com/kyrena/openmage-paymentmax
  *
@@ -43,7 +43,7 @@ class Kyrena_Paymentmax_Helper_Rewrite_Payment extends Mage_Payment_Helper_Data 
 				$keys = array_filter(explode(',', Mage::getStoreConfig('payment/'.$method->getCode().'/show_when_shipping')));
 				if (!empty($keys)) {
 					foreach ($keys as $key) {
-						if (stripos($shipping, $key) === false)
+						if (!str_contains($shipping, $key))
 							unset($methods[$idx]);
 					}
 				}
@@ -51,7 +51,7 @@ class Kyrena_Paymentmax_Helper_Rewrite_Payment extends Mage_Payment_Helper_Data 
 				$keys = array_filter(explode(',', Mage::getStoreConfig('payment/'.$method->getCode().'/hide_when_shipping')));
 				if (!empty($keys)) {
 					foreach ($keys as $key) {
-						if (stripos($shipping, $key) !== false)
+						if (str_contains($shipping, $key))
 							unset($methods[$idx]);
 					}
 				}

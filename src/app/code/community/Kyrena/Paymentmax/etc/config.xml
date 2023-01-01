@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created V/22/10/2021
- * Updated V/28/10/2022
+ * Updated J/17/11/2022
  *
- * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
  * https://github.com/kyrena/openmage-paymentmax
  *
@@ -21,7 +21,7 @@
 <config>
 	<modules>
 		<Kyrena_Paymentmax>
-			<version>1.0.1</version>
+			<version>1.0.2</version>
 		</Kyrena_Paymentmax>
 	</modules>
 	<global>
@@ -150,6 +150,9 @@
 				<img_backend>ic-logo-paypal.svg</img_backend>
 				<title>PayPal</title>
 				<group>paymentmax</group>
+				<!-- https://github.com/OpenMage/magento-lts/pull/1805 -->
+				<allowedcountry>AE,AR,AT,AU,BE,BG,BR,CA,CN,CH,CL,CR,CY,CZ,DE,DK,DO,EC,EE,ES,FI,FR,GB,GF,GI,GP,GR,HK,HU,ID,IE,IL,IN,IS,IT,JM,JP,KR,LI,LT,LU,LV,MQ,MT,MX,MY,NL,NO,NZ,PH,PL,PT,RU,RE,RO,SE,SG,SI,SK,SM,TH,TR,TW,US,UY,VE,VN,ZA</allowedcountry>
+				<allowedcurrency>AUD,CAD,CZK,DKK,EUR,HKD,HUF,ILS,JPY,MXN,NOK,NZD,PLN,GBP,RUB,SGD,SEK,CHF,TWD,THB,USD,INR</allowedcurrency>
 			</paymentmax_paypal>
 			<paypal_billing_agreement>
 				<model>paymentmax/payment_paypalbill</model>
@@ -229,6 +232,8 @@
 				<img_backend>ic-logo-tpay.svg</img_backend>
 				<title>Tpay</title>
 				<group>paymentmax</group>
+				<allowedcountry>AT,BE,BG,CY,CZ,DE,DK,EE,ES,FI,FR,GR,HR,HU,IE,IT,LT,LU,LV,MT,NL,PL,PT,RO,SE,SI,SK</allowedcountry>
+				<allowedcurrency>PLN</allowedcurrency>
 			</paymentmax_tpay>
 			<paymentmax_tpayblik>
 				<model>paymentmax/payment_tpayblik</model>
@@ -236,6 +241,8 @@
 				<img_backend>ic-logo-tpay.svg</img_backend>
 				<title>Tpay Blik</title>
 				<group>paymentmax</group>
+				<allowedcountry>AT,BE,BG,CY,CZ,DE,DK,EE,ES,FI,FR,GR,HR,HU,IE,IT,LT,LU,LV,MT,NL,PL,PT,RO,SE,SI,SK</allowedcountry>
+				<allowedcurrency>PLN</allowedcurrency>
 			</paymentmax_tpayblik>
 			<paymentmax_tpaycard>
 				<model>paymentmax/payment_tpaycard</model>
@@ -243,6 +250,8 @@
 				<img_backend>ic-logo-tpay.svg</img_backend>
 				<title>Tpay Karta płatnicza</title>
 				<group>paymentmax</group>
+				<allowedcountry>AT,BE,BG,CY,CZ,DE,DK,EE,ES,FI,FR,GR,HR,HU,IE,IT,LT,LU,LV,MT,NL,PL,PT,RO,SE,SI,SK</allowedcountry>
+				<allowedcurrency>PLN</allowedcurrency>
 			</paymentmax_tpaycard>
 			<paymentmax_tpayggpay>
 				<model>paymentmax/payment_tpayggpay</model>
@@ -250,6 +259,8 @@
 				<img_backend>ic-logo-tpay.svg</img_backend>
 				<title>Tpay Google Pay</title>
 				<group>paymentmax</group>
+				<allowedcountry>AT,BE,BG,CY,CZ,DE,DK,EE,ES,FI,FR,GR,HR,HU,IE,IT,LT,LU,LV,MT,NL,PL,PT,RO,SE,SI,SK</allowedcountry>
+				<allowedcurrency>PLN</allowedcurrency>
 			</paymentmax_tpayggpay>
 			<tpay>
 				<model>paymentmax/payment_tpayold</model>
@@ -271,6 +282,8 @@
 				<allowspecific>1</allowspecific>
 				<specificcountry>RU</specificcountry>
 				<group>paymentmax</group>
+				<allowedcountry>RU</allowedcountry>
+				<allowedcurrency>RUB</allowedcurrency>
 			</paymentmax_yookassa>
 			<paymentmax_yookassaqiwi>
 				<model>paymentmax/payment_yookassaqiwi</model>
@@ -281,6 +294,8 @@
 				<specificcountry>RU</specificcountry>
 				<max_order_total>250000</max_order_total>
 				<group>paymentmax</group>
+				<allowedcountry>RU</allowedcountry>
+				<allowedcurrency>RUB</allowedcurrency>
 			</paymentmax_yookassaqiwi>
 		</payment>
 	</default>

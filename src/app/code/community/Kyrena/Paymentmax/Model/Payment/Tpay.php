@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/12/11/2021
- * Updated J/03/11/2022
+ * Updated W/23/11/2022
  *
- * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
  * https://github.com/kyrena/openmage-paymentmax
  *
@@ -25,8 +25,6 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 	protected $_codes  = ['paymentmax_tpay', 'paymentmax_tpayblik', 'paymentmax_tpaycard', 'paymentmax_tpayggpay', 'tpay', 'tpayCards'];
 	protected $_allcnf = ['paymentmax_tpay', 'paymentmax_tpayblik', 'paymentmax_tpaycard', 'paymentmax_tpayggpay']; // allowed configuration
 	protected $_cache  = []; // transactions list
-	protected $_allowedCountries  = ['AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK']; // europe
-	protected $_allowedCurrencies = ['PLN'];
 
 
 	// openmage
@@ -151,10 +149,19 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 
 		$storeId = $order->getStoreId();
 		$blik    = ($this->_code == 'paymentmax_tpayblik') ? $order->getPayment()->getData('po_number') : null;
+		$billing = $order->getBillingAddress();
+
+		$city = trim($billing->getData('city'));
+		// strlen in tpayLibs\src\_class_tpay\Validators\FieldsValidator
+		if (strlen($city) > 32) {
+			$city = trim(mb_substr($city, 0, 32));
+			while (strlen($city) > 32)
+				$city = trim(mb_substr($city, 0, -1));
+		}
 
 		// https://docs.tpay.com/#!/Transaction_API/post_api_gw_api_key_transaction_create
 		// https://secure.tpay.com/groups-{idtpay}0.js
-		$billing  = $order->getBillingAddress();                               // tpay : tpaycard,tpayggpay : tpayblik
+		//                                                                        tpay : tpaycard,tpayggpay : tpayblik
 		$response = $this->callApi(empty($blik) ? (($this->_code == 'paymentmax_tpay') ? 'old' : 'payment') : 'blik', 'create', [[
 			'amount'      => $order->getTotalDue(),
 			'description' => (string) $order->getData('increment_id'),
@@ -164,7 +171,7 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 			'return_error_url' => $this->getOrderReturnUrl(['error' => 1]),
 			'email'       => $order->getData('customer_email'),
 			'name'        => $order->getData('customer_firstname').' '.$order->getData('customer_lastname'),
-			'city'        => mb_substr($billing->getData('city'), 0, 32),
+			'city'        => $city,
 			'zip'         => $billing->getData('postcode'),
 			'country'     => $billing->getData('country_id'),
 			'group'       => ($this->_code == 'paymentmax_tpayggpay') ? 166 : (empty($blik) ? 103 : 150), // tpayggpay : tpay,tpaycard : tpayblik
@@ -331,18 +338,22 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 		// sentry
 		$_SERVER['debug_tpay_response'] = $response;
 
-		$captureId = $response['id'];
+		// paiement en attente
+		// ne fait rien de plus
 		if (empty($response['status']))
 			return 'waiting';
+
 		$status = $response['status'];
 		if ($blik && ($status == 'pending'))
 			return 'waiting';
+
+		$captureId = $response['id'];
 
 		// paiement remboursé
 		// essaye de rembourser la commande
 		if ($status == 'chargeback') {
 
-			$this->refundOrder($order, $isHolded,
+			$this->refundOrder($order,
 				$response['amount'],
 				'PLN',
 				$captureId,

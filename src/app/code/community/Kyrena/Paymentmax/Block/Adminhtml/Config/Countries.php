@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated V/24/06/2022
+ * Updated M/06/12/2022
  *
- * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
  * https://github.com/kyrena/openmage-paymentmax
  *
@@ -19,6 +19,8 @@
  */
 
 class Kyrena_Paymentmax_Block_Adminhtml_Config_Countries extends Mage_Adminhtml_Block_System_Config_Form_Field {
+
+	protected $_options;
 
 	public function render(Varien_Data_Form_Element_Abstract $element) {
 

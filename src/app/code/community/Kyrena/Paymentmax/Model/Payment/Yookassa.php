@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated J/03/11/2022
+ * Updated V/09/12/2022
  *
- * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
  * https://github.com/kyrena/openmage-paymentmax
  *
@@ -24,8 +24,6 @@ class Kyrena_Paymentmax_Model_Payment_Yookassa extends Kyrena_Paymentmax_Model_P
 	protected $_formBlockType = 'paymentmax/payment_yookassa';
 	protected $_codes  = ['paymentmax_yookassa', 'paymentmax_yookassaqiwi'];
 	protected $_cache  = []; // transactions list
-	protected $_allowedCountries  = ['RU'];
-	protected $_allowedCurrencies = ['RUB'];
 
 
 	// kyrena
@@ -138,7 +136,7 @@ class Kyrena_Paymentmax_Model_Payment_Yookassa extends Kyrena_Paymentmax_Model_P
 				],
 				'items' => $items,
 			],
-			'description' => Mage::helper('paymentmax')->__('Refund completed by %s (%s).', $this->getUsername(), $ip),
+			'description' => Mage::helper('paymentmax')->__('Refund completed by %s (%s).', Mage::helper('paymentmax')->getUsername(), $ip),
 		], time()], $order->getStoreId());
 
 		return [
@@ -329,7 +327,7 @@ class Kyrena_Paymentmax_Model_Payment_Yookassa extends Kyrena_Paymentmax_Model_P
 			sleep(2);
 			$order->load($order->getId());
 
-			$this->refundOrder($order, $isHolded,
+			$this->refundOrder($order,
 				$response->getRefundedAmount()->getValue(),
 				$response->getAmount()->getCurrency(),
 				$captureId,

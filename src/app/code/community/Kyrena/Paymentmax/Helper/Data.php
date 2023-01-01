@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated V/10/06/2022
+ * Updated V/09/12/2022
  *
- * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
  * https://github.com/kyrena/openmage-paymentmax
  *
@@ -112,7 +112,7 @@ class Kyrena_Paymentmax_Helper_Data extends Mage_Core_Helper_Abstract {
 			$user = $action->getFullActionName();
 		// frontend
 		else
-			$user = sprintf('frontend %d', Mage::app()->getStore()->getData('code'));
+			$user = sprintf('frontend %s', Mage::app()->getStore()->getData('code'));
 
 		return $user;
 	}
@@ -124,8 +124,8 @@ class Kyrena_Paymentmax_Helper_Data extends Mage_Core_Helper_Abstract {
 		$countries = array_filter(explode(',', Mage::getStoreConfig('general/country/allow', $storeId)));
 
 		// filtre sur la config des pays possibles sur le mode de paiement (model)
-		$method = Mage::getModel('paymentmax/payment_'.str_replace('paymentmax_', '', $code));
-		$selCountries = $method ? $method->getAllowedCountries() : [];
+		$model = Mage::getModel('paymentmax/payment_'.str_replace('paymentmax_', '', $code));
+		$selCountries = $model ? $model->canUseForCountry(null, true) : [];
 		if (!empty($selCountries))
 			$countries = array_intersect($countries, $selCountries);
 

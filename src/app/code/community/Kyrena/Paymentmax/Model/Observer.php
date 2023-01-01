@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated J/03/11/2022
+ * Updated D/11/12/2022
  *
- * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
  * https://github.com/kyrena/openmage-paymentmax
  *
@@ -24,16 +24,16 @@ class Kyrena_Paymentmax_Model_Observer {
 	public function clearConfig(Varien_Event_Observer $observer) {
 
 		$database = Mage::getSingleton('core/resource');
-		$write = $database->getConnection('core_write');
-		$table = $database->getTableName('core_config_data');
+		$writer   = $database->getConnection('core_write');
+		$table    = $database->getTableName('core_config_data');
 
 		$payments = Mage::getModel('payment/config')->getAllMethods();
 		foreach ($payments as $code => $payment) {
 
 			if (Mage::getStoreConfigFlag('payment/account/remove_'.$code)) {
 
-				$write->query('DELETE FROM '.$table.' WHERE path LIKE "payment/'.$code.'/%" AND path NOT LIKE "payment/'.$code.'/active"');
-				$write->query('DELETE FROM '.$table.' WHERE path LIKE "payment/'.$code.'/active" AND scope_id != 0');
+				$writer->query('DELETE FROM '.$table.' WHERE path LIKE "payment/'.$code.'/%" AND path NOT LIKE "payment/'.$code.'/active"');
+				$writer->query('DELETE FROM '.$table.' WHERE path LIKE "payment/'.$code.'/active" AND scope_id != 0');
 
 				Mage::getModel('core/config')->saveConfig('payment/'.$code.'/active', '0');
 			}
@@ -45,10 +45,11 @@ class Kyrena_Paymentmax_Model_Observer {
 	// EVENT adminhtml_init_system_config (adminhtml)
 	public function hideConfig(Varien_Event_Observer $observer) {
 
-		$section = Mage::app()->getRequest()->getParam('section');
-		if ($section == 'payment') {
+		if (Mage::app()->getRequest()->getParam('section') == 'payment') {
+
 			$nodes    = $observer->getData('config')->getNode('sections/payment/groups')->children();
 			$payments = Mage::getModel('payment/config')->getAllMethods();
+
 			foreach ($payments as $code => $payment) {
 				if (!empty($nodes->{$code}) && Mage::getStoreConfigFlag('payment/account/remove_'.$code)) {
 					$nodes->{$code}->show_in_default = 0;
@@ -96,6 +97,7 @@ class Kyrena_Paymentmax_Model_Observer {
 			ini_set('memory_limit', '4G');
 
 		$msg = [];
+		$count    = 0;
 		$payments = Mage::getModel('payment/config')->getAllMethods();
 		$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds();
 		$hasError = false;
@@ -107,7 +109,7 @@ class Kyrena_Paymentmax_Model_Observer {
 
 				if (strncmp($code, 'paymentmax', 10) !== 0)
 					continue;
-				if (!method_exists($payment, 'getTransaction'))
+				if (!method_exists($payment, 'askTransaction'))
 					continue;
 				if (!$payment->getConfigFlag('cancel_pending', $storeId))
 					continue;
@@ -119,7 +121,11 @@ class Kyrena_Paymentmax_Model_Observer {
 					->setPageSize($all ? 10000 : 1000)
 					->setOrder('entity_id', 'asc');
 
-				$orders->getSelect()->joinLeft(['payment' => 'sales_flat_order_payment'], 'payment.parent_id = main_table.entity_id', ['payment_method' => 'payment.method']);
+				$orders->getSelect()->joinLeft(
+					['payment' => 'sales_flat_order_payment'],
+					 'payment.parent_id = main_table.entity_id',
+					['payment_method' => 'payment.method']
+				);
 				$orders->addFieldToFilter('payment.method', ($all === false) ? $code : ['in' => $payment->getAllCodes()]);
 
 				foreach ($orders as $order) {
@@ -158,19 +164,26 @@ class Kyrena_Paymentmax_Model_Observer {
 						$hasError = true;
 						$msg[] = $order->getData('increment_id').' ; '.$method.' ERROR '.$t->getMessage();
 					}
+
+					if (is_object($cron) && ((++$count % 100) == 0))
+						$this->saveCron($cron, $msg);
 				}
 
 				if (is_object($cron))
-					$cron->setData('messages', implode("\n", $msg))->save();
+					$this->saveCron($cron, $msg);
 			}
 		}
 
 		if (is_object($cron)) {
-			$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).'M (max: '.ini_get('memory_limit').')'."\n".implode("\n", $msg));
+			$this->saveCron($cron, $msg);
 			if ($hasError) // pour le statut du cron
 				Mage::throwException('At least one error occurred while canceling orders.'."\n\n".$cron->getData('messages')."\n\n");
 		}
 
 		return $msg;
+	}
+
+	protected function saveCron($cron, $msg) {
+		$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).'M (max: '.ini_get('memory_limit').')'."\n".implode("\n", $msg));
 	}
 }

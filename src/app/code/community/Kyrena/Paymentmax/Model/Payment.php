@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated J/03/11/2022
+ * Updated V/09/12/2022
  *
- * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
  * https://github.com/kyrena/openmage-paymentmax
  *
@@ -19,6 +19,9 @@
  */
 
 abstract class Kyrena_Paymentmax_Model_Payment extends Mage_Payment_Model_Method_Abstract {
+
+	protected $_allowedCountries  = false; // canUseForCountry
+	protected $_allowedCurrencies = false; // canUseForCurrency
 
 	protected $_isGateway                  = true;
 	protected $_canOrder                   = true;
@@ -79,30 +82,44 @@ abstract class Kyrena_Paymentmax_Model_Payment extends Mage_Payment_Model_Method
 		return parent::getConfigData($field, $storeId);
 	}
 
-	public function canUseForCountry($country, $list = false) {
+	public function canUseForCountry($country, $onlyList = false) {
 
-		$countries = $this->_allowedCountries ?? Mage::getResourceModel('directory/country_collection')->getColumnValues('country_id');
-		if ($list)
-			return $countries;
+		if (is_bool($this->_allowedCountries)) {
+			$this->_allowedCountries = array_filter(explode(',', (string) $this->getConfigData('allowedcountry')));
+			if (empty($this->_allowedCountries))
+				$this->_allowedCountries = Mage::getResourceModel('directory/country_collection')->getColumnValues('country_id');
+		}
 
-		if (!in_array($country, $countries))
+		if ($onlyList)
+			return $this->_allowedCountries;
+
+		if (!in_array($country, $this->_allowedCountries))
 			return false;
 
 		if ($this->getConfigData('allowspecific') == 1) {
-			$availableCountries = explode(',', $this->getConfigData('specificcountry'));
-			if (!in_array($country, $availableCountries))
+			$countries = explode(',', $this->getConfigData('specificcountry'));
+			if (!in_array($country, $countries))
 				return false;
 		}
 
 		return true;
 	}
 
-	public function canUseForCurrency($code) {
+	public function canUseForCurrency($currency, $onlyList = false) {
+
+		if (is_bool($this->_allowedCurrencies)) {
+			$this->_allowedCurrencies = array_filter(explode(',', (string) $this->getConfigData('allowedcurrency')));
+			if (empty($this->_allowedCurrencies))
+				return true;
+		}
+
+		if ($onlyList)
+			return $this->_allowedCurrencies;
 
 		if ($this->getConfigFlag('allow_current_currency') && (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[1]['function'] == 'isApplicableToQuote'))
-			$code = Mage::app()->getStore()->getCurrentCurrency()->getCode();
+			$currency = Mage::app()->getStore($this->getStore())->getCurrentCurrency()->getCode();
 
-		return in_array($code, $this->_allowedCurrencies);
+		return in_array($currency, $this->_allowedCurrencies);
 	}
 
 	public function getOrderPlaceRedirectUrl() {
@@ -112,14 +129,6 @@ abstract class Kyrena_Paymentmax_Model_Payment extends Mage_Payment_Model_Method
 	// kyrena
 	public function getAllCodes() {
 		return $this->_codes ?? [$this->_code];
-	}
-
-	public function getAllowedCountries() {
-		return $this->_allowedCountries;
-	}
-
-	public function getAllowedCurrencies() {
-		return $this->_allowedCurrencies;
 	}
 
 	public function getOrderWaitingUrl(array $params = []) {
@@ -155,7 +164,7 @@ abstract class Kyrena_Paymentmax_Model_Payment extends Mage_Payment_Model_Method
 		return $this->askRedirect($order);
 	}
 
-	protected function refundOrder(object $order, bool $isHolded, float $amount, string $currency, string $captureId, string $refundId, array $info = []) {
+	protected function refundOrder(object $order, float $amount, string $currency, string $captureId, string $refundId, array $info = []) {
 
 		$found   = false;
 		$amount  = (float) abs($amount);
@@ -179,6 +188,7 @@ abstract class Kyrena_Paymentmax_Model_Payment extends Mage_Payment_Model_Method
 
 		if (!$found) {
 
+			$isHolded = $order->getData('status') == 'holded';
 			if ($isHolded)
 				$order->unhold();
 			if ($this->uncancelOrder($order))
@@ -295,30 +305,5 @@ abstract class Kyrena_Paymentmax_Model_Payment extends Mage_Payment_Model_Method
 
 	protected function getCommonMessage($ipn, $txnId = null) {
 		return $ipn ? (empty($txnId) ? 'IPN.' : 'IPN (txnId: '.$txnId.').') : 'Customer is back.';
-	}
-
-	protected function getUsername() {
-
-		$file = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-		$file = array_pop($file);
-		$file = array_key_exists('file', $file) ? basename($file['file']) : '';
-
-		// backend
-		if ((PHP_SAPI != 'cli') && Mage::app()->getStore()->isAdmin() && Mage::getSingleton('admin/session')->isLoggedIn())
-			$user = sprintf('admin %s', Mage::getSingleton('admin/session')->getData('user')->getData('username'));
-		// cron
-		else if (is_object($cron = Mage::registry('current_cron')))
-			$user = sprintf('cron %d - %s', $cron->getId(), $cron->getData('job_code'));
-		// xyz.php
-		else if ($file != 'index.php')
-			$user = $file;
-		// full action name
-		else if (is_object($action = Mage::app()->getFrontController()->getAction()))
-			$user = $action->getFullActionName();
-		// frontend
-		else
-			$user = sprintf('frontend %d', Mage::app()->getStore()->getData('code'));
-
-		return $user;
 	}
 }

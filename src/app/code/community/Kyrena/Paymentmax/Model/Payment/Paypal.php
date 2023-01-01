@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated J/03/11/2022
+ * Updated V/09/12/2022
  *
- * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
  * https://github.com/kyrena/openmage-paymentmax
  *
@@ -24,125 +24,11 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 	protected $_formBlockType = 'paymentmax/payment_paypal';
 	protected $_codes  = ['paymentmax_paypal', 'paymentmax_paypalcheckout', 'paypal_billing_agreement', 'paypal_direct', 'paypal_express', 'paypal_express_bml', 'paypal_standard', 'paypal_wps_express', 'paypaluk_express', 'paypaluk_direct', 'verisign', 'hosted_pro', 'payflow_link', 'payflow_advanced'];
 	protected $_allcnf = ['paymentmax_paypal', 'paymentmax_paypalcheckout']; // allowed configuration
-	protected $_allowedCountries  = []; // canUseForCountry
-	protected $_allowedCurrencies = []; // canUseForCurrency
 
 
 	// openmage
 	public function getCode() {
 		return in_array($this->_code, $this->_allcnf) ? $this->_code : 'paymentmax_paypal';
-	}
-
-	public function canUseForCountry($country, $list = false) {
-
-		// copie de Magento 2 (https://github.com/OpenMage/magento-lts/pull/1805)
-		if ($this->_code != 'paymentmax_paypalcheckout') {
-			$this->_allowedCountries = [
-				'AE',
-				'AR',
-				'AT',
-				'AU',
-				'BE',
-				'BG',
-				'BR',
-				'CA',
-				'CN',
-				'CH',
-				'CL',
-				'CR',
-				'CY',
-				'CZ',
-				'DE',
-				'DK',
-				'DO',
-				'EC',
-				'EE',
-				'ES',
-				'FI',
-				'FR',
-				'GB',
-				'GF',
-				'GI',
-				'GP',
-				'GR',
-				'HK',
-				'HU',
-				'ID',
-				'IE',
-				'IL',
-				'IN',
-				'IS',
-				'IT',
-				'JM',
-				'JP',
-				'KR',
-				'LI',
-				'LT',
-				'LU',
-				'LV',
-				'MQ',
-				'MT',
-				'MX',
-				'MY',
-				'NL',
-				'NO',
-				'NZ',
-				'PH',
-				'PL',
-				'PT',
-				'RU',
-				'RE',
-				'RO',
-				'SE',
-				'SG',
-				'SI',
-				'SK',
-				'SM',
-				'TH',
-				'TR',
-				'TW',
-				'US',
-				'UY',
-				'VE',
-				'VN',
-				'ZA',
-			];
-		}
-
-		return parent::canUseForCountry($country, $list);
-	}
-
-	public function canUseForCurrency($code) {
-
-		// copie de Magento 2 (https://github.com/OpenMage/magento-lts/pull/1805)
-		if ($this->_code != 'paymentmax_paypalcheckout') {
-			$this->_allowedCurrencies = [
-				'AUD',
-				'CAD',
-				'CZK',
-				'DKK',
-				'EUR',
-				'HKD',
-				'HUF',
-				'ILS',
-				'JPY',
-				'MXN',
-				'NOK',
-				'NZD',
-				'PLN',
-				'GBP',
-				'RUB',
-				'SGD',
-				'SEK',
-				'CHF',
-				'TWD',
-				'THB',
-				'USD',
-				'INR',
-			];
-		}
-
-		return parent::canUseForCurrency($code);
 	}
 
 
@@ -277,7 +163,7 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 			'REFUNDTYPE'    => $partial ? 'Partial' : 'Full',
 			'AMT'           => $amount,
 			'CURRENCYCODE'  => $order->getData('order_currency_code'),
-			'NOTE'          => Mage::helper('paymentmax')->__('Refund completed by %s (%s).', $this->getUsername(), $ip),
+			'NOTE'          => Mage::helper('paymentmax')->__('Refund completed by %s (%s).', Mage::helper('paymentmax')->getUsername(), $ip),
 		], $storeId, $isTest);
 
 		return [
@@ -477,7 +363,7 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 			// essaye de rembourser la commande
 			if ($refund) {
 
-				$this->refundOrder($order, $isHolded,
+				$this->refundOrder($order,
 					$response['PAYMENTINFO_0_AMT'],
 					$response['PAYMENTINFO_0_CURRENCYCODE'],
 					$response['PAYMENTINFO_0_PARENTTRANSACTIONID'],
@@ -637,7 +523,12 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 			}
 		}
 
-		// paiement annulé ou refusé ou pas
+		// paiement en attente
+		// ne fait rien de plus
+		if ($post['payment_status'] == 'Pending')
+			return false;
+
+		// paiement annulé ou refusé
 		// essayer d'annuler la commande
 		if ($refused || (!empty($post['token']) && empty($post['PayerID']))) {
 

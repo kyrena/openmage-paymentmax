@@ -3,7 +3,7 @@
  * Created V/22/10/2021
  * Updated V/22/10/2021
  *
- * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
  * https://github.com/kyrena/openmage-paymentmax
  *
@@ -30,7 +30,7 @@
 				<Mage_Payment />
 				<Mage_Sales />
 			</depends>
-			<!-- see https://www.luigifab.fr/openmage/modules for more information -->
+			<!-- see https://github.com/luigifab/openmage-modules for more information -->
 			<update>https://raw.githubusercontent.com/kyrena/openmage-paymentmax/master/src/app/code/community/Kyrena/Paymentmax/etc/config.xml</update>
 		</Kyrena_Paymentmax>
 	</modules>

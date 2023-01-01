@@ -1,9 +1,9 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated D/06/11/2022
+ * Updated S/03/12/2022
  *
- * Copyright 2021-2022 | Fabrice Creuzot <fabrice~cellublue~com>
+ * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
  * https://github.com/kyrena/openmage-paymentmax
  *
@@ -23,7 +23,7 @@ class Kyrena_Paymentmax_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block
 	public function render(Varien_Data_Form_Element_Abstract $element) {
 
 		if (str_contains($element->getHtmlId(), 'openmage'))
-			return sprintf('<p class="box" style="margin-top:16px;">%s</p>', $element->getData('legend'));
+			return sprintf('<p class="box" style="margin-top:16px;">%s</p>', $element->getLegend());
 
 		$msg = $this->checkRewrites();
 		if ($msg !== true)
