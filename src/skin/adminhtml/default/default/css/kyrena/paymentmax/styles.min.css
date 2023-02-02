@@ -1,0 +1,8 @@
+/*!
+ * Copyright  | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * https://github.com/luigifab/openmage-paymentmax
+ * This program is free software, you can redistribute it or modify
+ * it under the terms of the GNU General Public License (GPL).
+ */
+img.logo.paymentmax{float:right;display:inline-block;margin:0 0 .5em 2em;max-width:150px;height:50px;image-rendering:optimizeQuality;image-rendering:-moz-crisp-edges}div.comment.paymentmax{padding-bottom:1em}div.comment.paymentmax .countries{margin-top:.5em;width:calc(100% - 160px)}div.comment.paymentmax .countries p span{text-decoration:underline}div.comment.paymentmax .countries ul{margin:-2px 0 10px;font-size:0;line-height:9px}div.comment.paymentmax .countries li{display:inline-block;width:33%;font-size:12px}div.comment.paymentmax .countries em{font-size:10px}
+/*# sourceMappingURL=styles.min.css.map */

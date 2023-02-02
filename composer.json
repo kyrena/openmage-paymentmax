@@ -72,8 +72,10 @@
             ["src/app/locale/uk_UA/Kyrena_Paymentmax.csv", "app/locale/uk_UA/Kyrena_Paymentmax.csv"],
             ["src/app/etc/modules/Kyrena_Paymentmax.xml", "app/etc/modules/Kyrena_Paymentmax.xml"],
             ["src/app/code/community/Kyrena/Paymentmax/", "app/code/community/Kyrena/Paymentmax/"],
+            ["src/app/design/adminhtml/default/default/layout/kyrena/paymentmax.xml", "app/design/adminhtml/default/default/layout/kyrena/paymentmax.xml"],
             ["src/app/design/adminhtml/default/default/template/kyrena/paymentmax/", "app/design/adminhtml/default/default/template/kyrena/paymentmax/"],
             ["src/app/design/frontend/base/default/template/kyrena/paymentmax/", "app/design/frontend/base/default/template/kyrena/paymentmax/"],
+            ["src/skin/adminhtml/default/default/css/kyrena/paymentmax/", "skin/adminhtml/default/default/css/kyrena/paymentmax/"],
             ["src/skin/adminhtml/default/default/images/kyrena/paymentmax", "skin/adminhtml/default/default/images/kyrena/paymentmax"],
             ["src/skin/frontend/base/default/images/kyrena/paymentmax/", "skin/frontend/base/default/images/kyrena/paymentmax/"]
         ]

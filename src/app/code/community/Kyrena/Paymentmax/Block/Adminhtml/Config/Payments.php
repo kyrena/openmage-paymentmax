@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated M/28/06/2022
+ * Updated J/29/12/2022
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -26,7 +26,7 @@ class Kyrena_Paymentmax_Block_Adminhtml_Config_Payments extends Mage_Adminhtml_B
 
 		$hid   = $element->getHtmlId();
 		$scope = $element->getScopeLabel();
-		$items = Mage::getModel('payment/config')->getAllMethods();
+		$items = Mage::getSingleton('payment/config')->getAllMethods();
 		$data  = [];
 
 		foreach ($items as $code => $payment) {

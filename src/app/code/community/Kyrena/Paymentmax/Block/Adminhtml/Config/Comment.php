@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/21/05/2021
- * Updated M/06/12/2022
+ * Updated M/24/01/2023
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -24,32 +24,32 @@ class Kyrena_Paymentmax_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Bl
 
 	public function render(Varien_Data_Form_Element_Abstract $element) {
 
-		// img.logo.paymentmax {
-		//	float:right; display:inline-block; margin:0 0 0.5em 2em; max-width:200px; max-height:50px;
-		//	image-rendering:optimizeQuality; image-rendering:-moz-crisp-edges;
-		//}
-
 		$html = [];
-		$code = (string) str_replace('payment_', '', $element->getId()); // (yes)
+		$help = $this->helper('paymentmax');
+		$code = (string) str_replace('payment_', '', $element->getHtmlId()); // (yes)
 
-		if (!str_contains($code, 'paymentmax_')) {
-			$this->_html = null;
-			return parent::render($element);
-		}
-
-		$storeId = $this->getStoreId();
-		$comment = $element->getComment();
-		$comment = empty($comment) ? '' : '<p>'.$comment.'</p>';
+		$storeId    = $this->getStoreId();
+		$comment    = $element->getComment();
+		$comment    = empty($comment) ? '' : '<p>'.$comment.'</p>';
+		$maxAmounts = [];
+		$maxWeight  = [];
 
 		$defaultCountry = Mage::getStoreConfig('general/country/default', $storeId);
-		$allCountries   = Mage::getSingleton('paymentmax/payment_'.str_replace('paymentmax_', '', $code))->canUseForCountry(null, true);
-		$selCountries   = $this->helper('paymentmax')->getPaymentCountries($code, $storeId);
+		$allCountries   = Mage::getStoreConfig('payment/'.$code.'/allowedcountry');
+		$allCountries   = empty($allCountries) ? [] : array_filter(explode(',', $allCountries));
+		$selCountries   = $help->getPaymentCountries($code, $storeId);
+		//$euCountries  = explode(',', Mage::getStoreConfig('general/country/eu_countries'));
+
+		// devises du mode de paiement
+		// $this->__('Allowed currencies (%d) for this method:')
 
 		// pays du mode de paiement
 		// fait la liste, si elle est vide, c'est que tous les pays sont autorisés
-		if ($selCountries != $allCountries) {
+		if (!empty($allCountries) && ($selCountries != $allCountries)) {
 
-			$html['all'][] = $this->__('Allowed countries for this method:').' ';
+			$html['all'][] = '<p><span>'.$this->__('Allowed countries (%d) for this method:', count($allCountries)).'</span></p>';
+			$html['all'][] = '<ul>';
+
 			foreach ($allCountries as $country) {
 
 				$name = Mage::getModel('directory/country')->loadByCode($country)->getName();
@@ -58,77 +58,101 @@ class Kyrena_Paymentmax_Block_Adminhtml_Config_Comment extends Mage_Adminhtml_Bl
 				if (!empty($maxAmounts[$key]['amount'])) {
 					$max = $help->getNumber($maxAmounts[$key]['amount'], ['precision' => 2]);
 					if ($country == $defaultCountry)
-						$html['all'][] = '<u><span title="'.addslashes($this->__('Default Country')).' - '.$name.', max '.$max.' '.$maxAmounts[$key]['currency'].'">'.$country.'</span></u>';
+						$html['all'][$country] = '<li><strong title="'.addslashes($this->__('Default Country')).'">'.$this->getFlag($country).'&nbsp;'.$country.' - '.$name.'</strong> <em>(max '.$max.' '.$maxAmounts[$key]['currency'].')</em></li>';
 					else
-						$html['all'][] = '<span title="'.$name.', max '.$max.' '.$maxAmounts[$key]['currency'].'">'.$country.'</span>';
+						$html['all'][$country] = '<li>'.$this->getFlag($country).'&nbsp;'.$country.' - '.$name.' <em>(max '.$max.' '.$maxAmounts[$key]['currency'].')</em></li>';
 				}
 				else if ($country == $defaultCountry) {
-					$html['all'][] = '<u><span title="'.addslashes($this->__('Default Country')).' - '.$name.'">'.$country.'</span></u>';
+					$html['all'][$country] = '<li><strong title="'.addslashes($this->__('Default Country')).'">'.$this->getFlag($country).'&nbsp;'.$country.' - '.$name.'</strong></li>';
 				}
 				else {
-					$html['all'][] = '<span title="'.$name.'">'.$country.'</span>';
+					$html['all'][$country] = '<li>'.$this->getFlag($country).'&nbsp;'.$country.' - '.$name.'</li>';
 				}
+
+				//if (in_array($country, $euCountries)) {
+				//	$key = count($html['all']) - 1;
+				//}
 			}
 
-			if (empty($allCountries)) {
-				$html['all'][] = '<a href="'.$this->getUrl('*/*/*', ['section' => 'general', 'store' => $this->getRequest()->getParam('store'), 'website' => $this->getRequest()->getParam('website')]).'">'.$this->__('All Allowed Countries').'</a>';
-			}
+			ksort($html['all'], SORT_NATURAL);
+			$html['all'][] = '</ul>';
+		}
+		else if (!empty($allCountries)) {
+			$html['all'][] = '<p><span>'.$this->__('Allowed countries (%d) for this method:', count($allCountries)).'</span> '.
+				'<img src="'.$this->getSkinUrl('images/sort-arrow-down.png').'" class="v-middle" /></p>';
+		}
+		else {
+			$defCountries = array_filter(explode(',', Mage::getStoreConfig('general/country/allow', $storeId)));
+			$html['all'][] = '<p><span>'.$this->__('Allowed countries (%d) for this method:', count($defCountries)).'</span>'.
+				' <a href="'.$this->getUrl('*/*/*', ['section' => 'general', 'store' => $this->getRequest()->getParam('store'), 'website' => $this->getRequest()->getParam('website')]).'">'.$this->__('All Allowed Countries').'</a>'.'</p>';
 		}
 
 		// pays possibles pour les clients
 		// fait la liste, si elle est vide, c'est qu'aucun pays n'est autorisé
-		$html['sel'][] = $this->__('Allowed countries for customers:').' ';
-		foreach ($selCountries as $country) {
+		if (!empty($selCountries)) {
 
-			$name = Mage::getModel('directory/country')->loadByCode($country)->getName();
-			$key  = strtolower($country);
+			$html['sel'][] = '<p><span>'.$this->__('Allowed countries (%d) for customers:', count($selCountries)).'</span></p>';
+			$html['sel'][] = '<ul>';
 
-			if (!empty($maxAmounts[$key]['amount'])) {
-				$max = $help->getNumber($maxAmounts[$key]['amount'], ['precision' => 2]);
-				if ($country == $defaultCountry)
-					$html['sel'][] = '<u title="'.addslashes($this->__('Default Country')).'"><strong>'.$country.'</strong>&nbsp;<em>('.$name.', max '.$max.'&nbsp;'.$maxAmounts[$key]['currency'].')</em></u>';
-				else
-					$html['sel'][] = '<strong>'.$country.'</strong>&nbsp;<em>('.$name.', max '.$max.'&nbsp;'.$maxAmounts[$key]['currency'].')</em>';
+			foreach ($selCountries as $country) {
+
+				$name = Mage::getModel('directory/country')->loadByCode($country)->getName();
+				$key  = strtolower($country);
+
+				if (!empty($maxAmounts[$key]['amount'])) {
+					$max = $help->getNumber($maxAmounts[$key]['amount'], ['precision' => 2]);
+					if ($country == $defaultCountry)
+						$html['sel'][$country] = '<li><strong title="'.addslashes($this->__('Default Country')).'">'.$this->getFlag($country).'&nbsp;'.$country.' - '.$name.'</strong> <em>(max '.$max.' '.$maxAmounts[$key]['currency'].')</em></li>';
+					else
+						$html['sel'][$country] = '<li>'.$this->getFlag($country).'&nbsp;'.$country.' - '.$name.' <em>(max '.$max.' '.$maxAmounts[$key]['currency'].')</em></li>';
+				}
+				else if ($country == $defaultCountry) {
+					$html['sel'][$country] = '<li><strong title="'.addslashes($this->__('Default Country')).'">'.$this->getFlag($country).'&nbsp;'.$country.' - '.$name.'</strong></li>';
+				}
+				else {
+					$html['sel'][$country] = '<li>'.$this->getFlag($country).'&nbsp;'.$country.' - '.$name.'</li>';
+				}
+
+				//if (in_array($country, $euCountries)) {
+				//	$key = count($html['sel']) - 1;
+				//}
 			}
-			else if ($country == $defaultCountry) {
-				$html['sel'][] = '<u title="'.addslashes($this->__('Default Country')).'"><strong>'.$country.'</strong>&nbsp;<em>('.$name.')</em></u>';
-			}
-			else {
-				$html['sel'][] = '<strong>'.$country.'</strong>&nbsp;<em>('.$name.')</em>';
-			}
+
+			ksort($html['sel'], SORT_NATURAL);
+			$html['sel'][] = '</ul>';
 		}
-
-		if (empty($selCountries)) {
-			$html['sel'][] = '<a href="'.$this->getUrl('*/*/*', ['section' => 'general', 'store' => $this->getRequest()->getParam('store'), 'website' => $this->getRequest()->getParam('website')]).'">'.$this->__('None').'</a>';
+		else {
+			$html['sel'][] = '<p><span>'.$this->__('Allowed countries (%d) for customers:', 0).'</span>'.
+				' <a href="'.$this->getUrl('*/*/*', ['section' => 'general', 'store' => $this->getRequest()->getParam('store'), 'website' => $this->getRequest()->getParam('website')]).'">'.$this->__('None').'</a></p>';
 		}
 
 		// final
-		$code = (string) str_replace('payment_', '', $element->getId()); // (yes)
-		$this->_html = str_replace(': ,', ': ',
+		$this->_html =
 			'<div class="comment paymentmax">'.
-				(empty($svg = Mage::getStoreConfig('payment/'.$code.'/img_backend')) ? '' : '<img src="'.$this->getSkinUrl('images/kyrena/paymentmax/'.$svg).'" alt="" class="paymentmax logo" style="float:right; display:inline-block; margin:0 0 0.5em 2em; max-width:150px; height:50px; image-rendering:optimizeQuality; image-rendering:-moz-crisp-edges;" />').
+				(empty($svg = Mage::getStoreConfig('payment/'.$code.'/img_backend')) ? '' : '<img src="'.$this->getSkinUrl('images/kyrena/paymentmax/'.$svg).'" alt="" class="paymentmax logo" />').
 				$comment.
-				(empty($html['all']) ? '' : '<p>'.implode(', ', $html['all']).'.</p>').
-				(empty($html['sel']) ? '' : '<p>'.implode(', ', $html['sel']).'.</p>').
-			'</div>');
+				'<div class="countries">'.
+					(empty($html['all']) ? '' : implode($html['all'])).
+					(empty($html['sel']) ? '' : implode($html['sel'])).
+				'</div>'.
+			'</div>';
 
-		// drapeau utf8
-		$flag = '';
-		if (preg_match('#^[A-Z]{2} - #', $element->getLegend()) === 1) {
-			$flag = substr($element->getLegend(), 0, 2);
-			$flag = mb_convert_encoding('&#'.(127397 + ord($flag[0])).';', 'UTF-8', 'HTML-ENTITIES').
-				mb_convert_encoding('&#'.(127397 + ord($flag[1])).';', 'UTF-8', 'HTML-ENTITIES').
-				' &nbsp;';
-		}
-
-		// marquage
-		$element->setLegend($flag.$element->getLegend().((in_array($defaultCountry, $selCountries) && Mage::getStoreConfigFlag('payment/'.$code.'/active', $storeId)) ? ' *' : ''));
+		// drapeau et éventuel marquage
+		$legend = $element->getLegend();
+		$flag   = (preg_match('#^[A-Z]{2} - #', $legend) === 1) ? $this->getFlag(substr($legend, 0, 2)).'&nbsp;&nbsp;' : '';
+		$element->setLegend($flag.$legend.
+			((in_array($defaultCountry, $selCountries) && Mage::getStoreConfigFlag('payment/'.$code.'/active', $storeId)) ? ' *' : ''));
 
 		return parent::render($element);
 	}
 
 	protected function _getHeaderCommentHtml($element) {
 		return $this->_html ?? parent::_getHeaderCommentHtml($element);
+	}
+
+	protected function getFlag($code) {
+		return mb_convert_encoding('&#'.(127397 + ord($code[0])).';', 'UTF-8', 'HTML-ENTITIES').
+			mb_convert_encoding('&#'.(127397 + ord($code[1])).';', 'UTF-8', 'HTML-ENTITIES');
 	}
 
 	protected function getStoreId() {

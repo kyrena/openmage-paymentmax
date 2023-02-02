@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated V/09/12/2022
+ * Updated S/14/01/2023
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -76,27 +76,26 @@ abstract class Kyrena_Paymentmax_Model_Payment extends Mage_Payment_Model_Method
 
 	public function getConfigData($field, $storeId = null) {
 
-		if (isset($this->_allcnf))
-			return (($field == 'active') && !in_array($this->_code, $this->_allcnf)) ? false : parent::getConfigData($field, $storeId);
+		if (isset($this->_allcnf) && ($field == 'active') && !in_array($this->_code, $this->_allcnf))
+			return false;
 
 		return parent::getConfigData($field, $storeId);
 	}
 
-	public function canUseForCountry($country, $onlyList = false) {
+	public function canUseForCountry($country) {
 
 		if (is_bool($this->_allowedCountries)) {
 			$this->_allowedCountries = array_filter(explode(',', (string) $this->getConfigData('allowedcountry')));
 			if (empty($this->_allowedCountries))
-				$this->_allowedCountries = Mage::getResourceModel('directory/country_collection')->getColumnValues('country_id');
+				$this->_allowedCountries = array_filter(explode(',', Mage::getStoreConfig('general/country/allow', $this->getStore())));
 		}
 
-		if ($onlyList)
-			return $this->_allowedCountries;
-
+		// allowedcountry
 		if (!in_array($country, $this->_allowedCountries))
 			return false;
 
-		if ($this->getConfigData('allowspecific') == 1) {
+		// allowspecific + specificcountry
+		if ($this->getConfigFlag('allowspecific')) {
 			$countries = explode(',', $this->getConfigData('specificcountry'));
 			if (!in_array($country, $countries))
 				return false;
@@ -105,16 +104,13 @@ abstract class Kyrena_Paymentmax_Model_Payment extends Mage_Payment_Model_Method
 		return true;
 	}
 
-	public function canUseForCurrency($currency, $onlyList = false) {
+	public function canUseForCurrency($currency) {
 
 		if (is_bool($this->_allowedCurrencies)) {
 			$this->_allowedCurrencies = array_filter(explode(',', (string) $this->getConfigData('allowedcurrency')));
 			if (empty($this->_allowedCurrencies))
 				return true;
 		}
-
-		if ($onlyList)
-			return $this->_allowedCurrencies;
 
 		if ($this->getConfigFlag('allow_current_currency') && (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[1]['function'] == 'isApplicableToQuote'))
 			$currency = Mage::app()->getStore($this->getStore())->getCurrentCurrency()->getCode();

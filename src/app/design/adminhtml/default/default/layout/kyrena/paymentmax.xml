@@ -1,7 +1,7 @@
-<?php
-/**
- * Created V/22/10/2021
- * Updated M/24/01/2023
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Created J/05/01/2023
+ * Updated J/05/01/2023
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -16,13 +16,15 @@
  * but without any warranty, without even the implied warranty of
  * merchantability or fitness for a particular purpose. See the
  * GNU General Public License (GPL) for more details.
- */
+-->
 
-class Kyrena_Paymentmax_Block_Adminhtml_Config_Ipn extends Mage_Adminhtml_Block_System_Config_Form_Field {
-
-	protected function _getElementHtml(Varien_Data_Form_Element_Abstract $element) {
-		$parts = explode('_', $element->getHtmlId());
-		$element->setValue(Mage::getUrl('paymentmax/'.$parts[2].'/ipn', ['_store' => Mage::app()->getDefaultStoreView()->getId()]));
-		return '<div class="paymentmax ipnlink">'.$element->getValue().'</div>';
-	}
-}
+<layout version="0.1.0">
+	<adminhtml_system_config_edit>
+		<reference name="head">
+			<action method="addItem">
+				<type>skin_css</type>
+				<name>css/kyrena/paymentmax/styles.min.css</name>
+			</action>
+		</reference>
+	</adminhtml_system_config_edit>
+</layout>

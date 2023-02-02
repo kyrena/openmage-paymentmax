@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated D/11/12/2022
+ * Updated J/29/12/2022
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -27,7 +27,7 @@ class Kyrena_Paymentmax_Model_Observer {
 		$writer   = $database->getConnection('core_write');
 		$table    = $database->getTableName('core_config_data');
 
-		$payments = Mage::getModel('payment/config')->getAllMethods();
+		$payments = Mage::getSingleton('payment/config')->getAllMethods();
 		foreach ($payments as $code => $payment) {
 
 			if (Mage::getStoreConfigFlag('payment/account/remove_'.$code)) {
@@ -48,7 +48,7 @@ class Kyrena_Paymentmax_Model_Observer {
 		if (Mage::app()->getRequest()->getParam('section') == 'payment') {
 
 			$nodes    = $observer->getData('config')->getNode('sections/payment/groups')->children();
-			$payments = Mage::getModel('payment/config')->getAllMethods();
+			$payments = Mage::getSingleton('payment/config')->getAllMethods();
 
 			foreach ($payments as $code => $payment) {
 				if (!empty($nodes->{$code}) && Mage::getStoreConfigFlag('payment/account/remove_'.$code)) {
@@ -98,7 +98,7 @@ class Kyrena_Paymentmax_Model_Observer {
 
 		$msg = [];
 		$count    = 0;
-		$payments = Mage::getModel('payment/config')->getAllMethods();
+		$payments = Mage::getSingleton('payment/config')->getAllMethods();
 		$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds();
 		$hasError = false;
 		sort($storeIds);

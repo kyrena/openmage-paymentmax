@@ -1,6 +1,6 @@
 "Hide and clear configuration","Ukryj i usuń ustawienia"
-"Allowed countries for this method:","Metoda dostępna dla:"
-"Allowed countries for customers:","Dostępne kraje:"
+"Allowed countries (%d) for this method:","Dozwolone kraje (%d) dla tej metody:"
+"Allowed countries (%d) for customers:","Dozwolone kraje (%d) dla klientów:"
 "INCOMPLETE MODULE INSTALLATION","NIEKOMPLETNA INSTALACJA MODUŁU"
 "There is conflict (<em>%s</em>).","Pojawił się błąd (<em lang=""en"">%s</em>)."
 "You will be redirected to payment page after submitting order.","Po potwierdzeniu zamówienia zostaniesz przekierowany do strony płatości."

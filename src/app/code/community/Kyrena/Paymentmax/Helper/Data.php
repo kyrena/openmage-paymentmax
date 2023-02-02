@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated V/09/12/2022
+ * Updated S/14/01/2023
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -64,7 +64,7 @@ class Kyrena_Paymentmax_Helper_Data extends Mage_Core_Helper_Abstract {
 	}
 
 	public function getNumber($value, array $options = []) {
-		$options['locale'] = Mage::getSingleton('core/translate')->getLocale();
+		$options['locale'] = Mage::getSingleton('core/locale')->getLocaleCode();
 		return Zend_Locale_Format::toNumber($value, $options);
 	}
 
@@ -120,21 +120,21 @@ class Kyrena_Paymentmax_Helper_Data extends Mage_Core_Helper_Abstract {
 
 	public function getPaymentCountries(string $code, $storeId = null) {
 
-		// tous les pays (back-office, system.xml)
+		// liste des pays autorisés
 		$countries = array_filter(explode(',', Mage::getStoreConfig('general/country/allow', $storeId)));
 
-		// filtre sur la config des pays possibles sur le mode de paiement (model)
-		$model = Mage::getModel('paymentmax/payment_'.str_replace('paymentmax_', '', $code));
-		$selCountries = $model ? $model->canUseForCountry(null, true) : [];
+		// filtre sur la config des pays possibles sur le mode de paiement
+		$selCountries = Mage::getStoreConfig('payment/'.$code.'/allowedcountry');
+		$selCountries = empty($selCountries) ? [] : array_filter(explode(',', $selCountries));
 		if (!empty($selCountries))
 			$countries = array_intersect($countries, $selCountries);
 
-		// filtre sur la config des pays autorisés sur le mode de paiement (back-office, system.xml)
+		// filtre sur la config des pays autorisés sur le mode de paiement
 		if (Mage::getStoreConfigFlag('payment/'.$code.'/allowspecific', $storeId)) {
 			$selCountries = array_filter(explode(',', Mage::getStoreConfig('payment/'.$code.'/specificcountry', $storeId)));
 			$countries    = array_intersect($countries, $selCountries);
 		}
 
-		return $countries;
+		return array_values($countries);
 	}
 }

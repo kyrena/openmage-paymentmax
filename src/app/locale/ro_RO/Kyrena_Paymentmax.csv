@@ -1,6 +1,6 @@
 "Hide and clear configuration","Ascunde și șterge configurația"
-"Allowed countries for this method:","Țările permise pentru această metodă:"
-"Allowed countries for customers:","Țări permise pentru clienți:"
+"Allowed countries (%d) for this method:","Țări permise (%d) pentru această metodă:"
+"Allowed countries (%d) for customers:","Țări permise (%d) pentru clienți:"
 "INCOMPLETE MODULE INSTALLATION","INSTALARE INCOMPLETĂ"
 "There is conflict (<em>%s</em>).","Există un conflict (<em>%s</em>)."
 "You will be redirected to payment page after submitting order.","Vei fi redirecționat către pagina de plată după transmiterea comenzii."

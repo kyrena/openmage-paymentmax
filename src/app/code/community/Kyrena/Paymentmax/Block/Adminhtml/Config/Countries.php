@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated M/06/12/2022
+ * Updated M/24/01/2023
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -24,14 +24,16 @@ class Kyrena_Paymentmax_Block_Adminhtml_Config_Countries extends Mage_Adminhtml_
 
 	public function render(Varien_Data_Form_Element_Abstract $element) {
 
-		$parts = explode('_', $element->getId());
 		if (!$this->_options)
 			$this->_options = Mage::getResourceModel('directory/country_collection')->loadData()->toOptionArray(false);
 
-		$countries = Mage::getSingleton('paymentmax/payment_'.$parts[2])->canUseForCountry(null, true);
+		$code = (string) str_replace(['payment_', '_specificcountry'], '', $element->getHtmlId()); // (yes)
+		$countries = Mage::getStoreConfig('payment/'.$code.'/allowedcountry');
+		$countries = empty($countries) ? [] : array_filter(explode(',', $countries));
+
 		$options = [];
 		foreach ($this->_options as $option) {
-			if (is_array($countries) && in_array($option['value'], $countries))
+			if (empty($countries) || in_array($option['value'], $countries))
 				$options[] = $option;
 		}
 

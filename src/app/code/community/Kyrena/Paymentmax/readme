@@ -61,8 +61,10 @@ Files and directories
 - app/locale/uk_UA/Kyrena_Paymentmax.csv
 - app/etc/modules/Kyrena_Paymentmax.xml
 - app/code/community/Kyrena/Paymentmax/
+- app/design/adminhtml/default/default/layout/kyrena/paymentmax.xml
 - app/design/adminhtml/default/default/template/kyrena/paymentmax/
 - app/design/frontend/base/default/template/kyrena/paymentmax/
+- skin/adminhtml/default/default/css/kyrena/paymentmax/
 - skin/adminhtml/default/default/images/kyrena/paymentmax
 - skin/frontend/base/default/images/kyrena/paymentmax/
 
