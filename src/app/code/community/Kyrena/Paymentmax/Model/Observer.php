@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated J/29/12/2022
+ * Updated M/14/02/2023
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -26,15 +26,12 @@ class Kyrena_Paymentmax_Model_Observer {
 		$database = Mage::getSingleton('core/resource');
 		$writer   = $database->getConnection('core_write');
 		$table    = $database->getTableName('core_config_data');
+		$codes    = array_keys(Mage::getSingleton('payment/config')->getAllMethods());
 
-		$payments = Mage::getSingleton('payment/config')->getAllMethods();
-		foreach ($payments as $code => $payment) {
-
+		foreach ($codes as $code) {
 			if (Mage::getStoreConfigFlag('payment/account/remove_'.$code)) {
-
 				$writer->query('DELETE FROM '.$table.' WHERE path LIKE "payment/'.$code.'/%" AND path NOT LIKE "payment/'.$code.'/active"');
 				$writer->query('DELETE FROM '.$table.' WHERE path LIKE "payment/'.$code.'/active" AND scope_id != 0');
-
 				Mage::getModel('core/config')->saveConfig('payment/'.$code.'/active', '0');
 			}
 		}
@@ -47,10 +44,10 @@ class Kyrena_Paymentmax_Model_Observer {
 
 		if (Mage::app()->getRequest()->getParam('section') == 'payment') {
 
-			$nodes    = $observer->getData('config')->getNode('sections/payment/groups')->children();
-			$payments = Mage::getSingleton('payment/config')->getAllMethods();
+			$nodes = $observer->getData('config')->getNode('sections/payment/groups')->children();
+			$codes = array_keys(Mage::getSingleton('payment/config')->getAllMethods());
 
-			foreach ($payments as $code => $payment) {
+			foreach ($codes as $code) {
 				if (!empty($nodes->{$code}) && Mage::getStoreConfigFlag('payment/account/remove_'.$code)) {
 					$nodes->{$code}->show_in_default = 0;
 					$nodes->{$code}->show_in_website = 0;

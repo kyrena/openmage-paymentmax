@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated V/09/12/2022
+ * Updated V/24/03/2023
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -22,8 +22,7 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 
 	protected $_code          = 'paymentmax_paypal';
 	protected $_formBlockType = 'paymentmax/payment_paypal';
-	protected $_codes  = ['paymentmax_paypal', 'paymentmax_paypalcheckout', 'paypal_billing_agreement', 'paypal_direct', 'paypal_express', 'paypal_express_bml', 'paypal_standard', 'paypal_wps_express', 'paypaluk_express', 'paypaluk_direct', 'verisign', 'hosted_pro', 'payflow_link', 'payflow_advanced'];
-	protected $_allcnf = ['paymentmax_paypal', 'paymentmax_paypalcheckout']; // allowed configuration
+	protected $_codes         = ['paymentmax_paypal', 'paymentmax_paypalcheckout', 'paypal_billing_agreement', 'paypal_direct', 'paypal_express', 'paypal_express_bml', 'paypal_standard', 'paypal_wps_express', 'paypaluk_express', 'paypaluk_direct', 'verisign', 'hosted_pro', 'payflow_link', 'payflow_advanced'];
 
 
 	// openmage
@@ -142,7 +141,7 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 
 		if ($check && (!is_array($response) || ($response['ACK'] != 'Success')))
 			Mage::throwException(empty($response['L_ERRORCODE0']) ?
-				sprintf('Error with PayPal: %s', $response) :
+				sprintf('Error with PayPal: %s', print_r($response, true)) :
 				sprintf('Error with PayPal: %s: %s %s', $response['L_ERRORCODE0'], str_replace(' See additional error messages for details.', '', $response['L_SHORTMESSAGE0']), $response['L_LONGMESSAGE0']));
 
 		return (array) $response;
@@ -425,21 +424,6 @@ class Kyrena_Paymentmax_Model_Payment_Paypal extends Kyrena_Paymentmax_Model_Pay
 
 				if ($isHolded && $order->canHold())
 					$order->hold()->save();
-
-				// s'assure que le montant est bon
-				if (($post['PayerID'] == 'paypalcheckout') && (bccomp($order->getData('grand_total'), $response['PAYMENTINFO_0_AMT'], 2) != 0)) {
-					$order->addStatusHistoryComment($this->getCommonMessage($ipn, $captureId).' Warning! Invalid amount paid!');
-					if ($order->canHold()) {
-						$order->hold();
-					}
-					else if ($order->getData('state') != 'holded') {
-						$order->setData('hold_before_state', $order->getData('state'));
-						$order->setData('hold_before_status', $order->getData('status'));
-						$order->setData('state', 'holded');
-						$order->setData('status', 'holded');
-					}
-					$order->save();
-				}
 
 				return true;
 			}

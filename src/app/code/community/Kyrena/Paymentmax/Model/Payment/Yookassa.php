@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated V/09/12/2022
+ * Updated V/24/03/2023
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -22,8 +22,8 @@ class Kyrena_Paymentmax_Model_Payment_Yookassa extends Kyrena_Paymentmax_Model_P
 
 	protected $_code          = 'paymentmax_yookassa';
 	protected $_formBlockType = 'paymentmax/payment_yookassa';
-	protected $_codes  = ['paymentmax_yookassa', 'paymentmax_yookassaqiwi'];
-	protected $_cache  = []; // transactions list
+	protected $_codes         = ['paymentmax_yookassa', 'paymentmax_yookassaqiwi'];
+	protected $_cache         = []; // transactions list
 
 
 	// kyrena

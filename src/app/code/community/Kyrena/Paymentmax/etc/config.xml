@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created V/22/10/2021
- * Updated S/27/01/2023
+ * Updated V/24/03/2023
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -21,7 +21,7 @@
 <config>
 	<modules>
 		<Kyrena_Paymentmax>
-			<version>1.1.0</version>
+			<version>1.1.1</version>
 		</Kyrena_Paymentmax>
 	</modules>
 	<global>
@@ -163,6 +163,12 @@
 				<allowedcountry>AE,AR,AT,AU,BE,BG,BR,CA,CN,CH,CL,CR,CY,CZ,DE,DK,DO,EC,EE,ES,FI,FR,GB,GF,GI,GP,GR,HK,HU,ID,IE,IL,IN,IS,IT,JM,JP,KR,LI,LT,LU,LV,MQ,MT,MX,MY,NL,NO,NZ,PH,PL,PT,RU,RE,RO,SE,SG,SI,SK,SM,TH,TR,TW,US,UY,VE,VN,ZA</allowedcountry>
 				<allowedcurrency>AUD,CAD,CZK,DKK,EUR,HKD,HUF,ILS,JPY,MXN,NOK,NZD,PLN,GBP,RUB,SGD,SEK,CHF,TWD,THB,USD,INR</allowedcurrency>
 			</paymentmax_paypal>
+			<paymentmax_paypalcheckout>
+				<model>paymentmax/payment_paypalcheckout</model>
+				<active>0</active>
+				<title>PayPal</title>
+				<group>paymentmax_old</group>
+			</paymentmax_paypalcheckout>
 			<paypal_billing_agreement>
 				<model>paymentmax/payment_paypalbill</model>
 				<active>0</active>

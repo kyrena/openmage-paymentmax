@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated S/03/12/2022
+ * Updated J/02/03/2023
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -32,8 +32,27 @@ class Kyrena_Paymentmax_Block_Adminhtml_Config_Help extends Mage_Adminhtml_Block
 				$this->__('INCOMPLETE MODULE INSTALLATION'),
 				$this->__('There is conflict (<em>%s</em>).', $msg));
 
-		return sprintf('<p class="box">%s %s <span class="right">Stop russian war. <b>🇺🇦 Free Ukraine!</b> | <a href="https://%s">github.com/kyrena</a></span></p>',
-			'Kyrena/Paymentmax', $this->helper('paymentmax')->getVersion(), 'github.com/kyrena/openmage-paymentmax');
+		$var = (int) ini_get($name = 'max_input_vars');
+		$rav = (int) ini_get($eman = 'suhosin.post.max_vars');
+		if (($rav > 0) && ($rav < $var)) {
+			$name = $eman;
+			$var = $rav;
+		}
+		$rav = (int) ini_get($eman = 'suhosin.request.max_vars');
+		if (($rav > 0) && ($rav < $var)) {
+			$name = $eman;
+			$var = $rav;
+		}
+
+		return sprintf('<p class="box">%s %s <span class="no-display" id="inptvars"></span> <span class="right">Stop russian war. <b>🇺🇦 Free Ukraine!</b> | <a href="https://%s">github.com/kyrena</a></span></p>%s',
+			'Kyrena/Paymentmax', $this->helper('paymentmax')->getVersion(), 'github.com/kyrena/openmage-paymentmax',
+			'<script type="text/javascript">self.addEventListener("load", function () {'.
+			' var nb = document.querySelectorAll("input, select, textarea").length, elem = document.getElementById("inptvars");'.
+			' if ('.$var.' <= nb) {'.
+			'  elem.innerHTML = " | ⚠ php:'.$name.' = '.$var.' <= " + nb + " inputs";'.
+			'  elem.setAttribute("class", "error");'.
+			' }'.
+			'});</script>');
 	}
 
 	protected function checkRewrites() {

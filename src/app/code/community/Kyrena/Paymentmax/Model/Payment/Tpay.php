@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/12/11/2021
- * Updated W/23/11/2022
+ * Updated V/24/03/2023
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -22,9 +22,9 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 
 	protected $_code          = 'paymentmax_tpay';
 	protected $_formBlockType = 'paymentmax/payment_tpay';
-	protected $_codes  = ['paymentmax_tpay', 'paymentmax_tpayblik', 'paymentmax_tpaycard', 'paymentmax_tpayggpay', 'tpay', 'tpayCards'];
-	protected $_allcnf = ['paymentmax_tpay', 'paymentmax_tpayblik', 'paymentmax_tpaycard', 'paymentmax_tpayggpay']; // allowed configuration
-	protected $_cache  = []; // transactions list
+	protected $_codes         = ['paymentmax_tpay', 'paymentmax_tpayblik', 'paymentmax_tpaycard', 'paymentmax_tpayggpay', 'tpay', 'tpayCards'];
+	protected $_allcnf        = ['paymentmax_tpay', 'paymentmax_tpayblik', 'paymentmax_tpaycard', 'paymentmax_tpayggpay']; // allowed configuration
+	protected $_cache         = []; // transactions list
 
 
 	// openmage
@@ -40,7 +40,9 @@ class Kyrena_Paymentmax_Model_Payment_Tpay extends Kyrena_Paymentmax_Model_Payme
 		if (!($data instanceof Varien_Object))
 			$data = new Varien_Object($data);
 
-		$this->getInfoInstance()->setData('po_number', implode('', $data->getData('paymentmax_tpayblik_otp')));
+		$code = $data->getData('paymentmax_tpayblik_otp');
+		$this->getInfoInstance()->setData('po_number', is_array($code) ? implode('', $code) : $code);
+
 		return $this;
 	}
 
