@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Created V/22/10/2021
- * Updated V/24/03/2023
+ * Updated D/04/06/2023
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -21,7 +21,7 @@
 <config>
 	<modules>
 		<Kyrena_Paymentmax>
-			<version>1.1.1</version>
+			<version>1.1.2</version>
 		</Kyrena_Paymentmax>
 	</modules>
 	<global>

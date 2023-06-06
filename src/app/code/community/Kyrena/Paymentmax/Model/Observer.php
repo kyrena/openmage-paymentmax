@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated M/14/02/2023
+ * Updated V/14/04/2023
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -93,11 +93,11 @@ class Kyrena_Paymentmax_Model_Observer {
 		if ($limit < 4294967296)
 			ini_set('memory_limit', '4G');
 
-		$msg = [];
+		$msg      = [];
 		$count    = 0;
-		$payments = Mage::getSingleton('payment/config')->getAllMethods();
-		$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds();
 		$hasError = false;
+		$payments = Mage::getSingleton('payment/config')->getAllMethods();
+		$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds(); // with admin
 		sort($storeIds);
 
 		foreach ($storeIds as $storeId) {
@@ -135,24 +135,32 @@ class Kyrena_Paymentmax_Model_Observer {
 							$msg[] = $order->getData('increment_id').' ; '.$order->getData('created_at').' ; '.
 								$order->getData('state').'/'.$order->getData('status').'/'.$method.' ; OOPS transaction found '.$payed;
 						}
-						else if ($order->canCancel() && ($order->getInvoiceCollection()->getSize() == 0) && ($order->getShipmentsCollection()->getSize() == 0)) {
+						else if (($order->getInvoiceCollection()->getSize() == 0) && ($order->getShipmentsCollection()->getSize() == 0)) {
+
+							$can = $order->canCancel();
 							$order->load($order->getId());
-							$order->cancel('Cancel pending order after 30 minutes.');
+							if ($can)
+								$order->cancel('Cancel pending order after 30 minutes.');
+
 							$order->setData('status', 'canceled');
 							$order->setData('state', 'canceled');
+
+							if (!$can)
+								$order->addStatusHistoryComment('Cancel pending order after 30 minutes (again).')->save();
+
 							$order->save();
 							$msg[] = $order->getData('increment_id').' ; '.$order->getData('created_at').' ; '.
 								$order->getData('state').'/'.$order->getData('status').'/'.$method.' ; now canceled';
 						}
 						else {
-							$text  = 'Can not cancel pending order after 30 minutes.';
 							$items = $order->getStatusHistoryCollection();
 							foreach ($items as $item) {
-								if ($item->getData('comment') == $text)
+								$comment = $item->getData('comment');
+								if (!empty($comment) && (stripos($comment, 'cancel pending order after') !== false))
 									$item->delete();
 							}
 
-							$order->addStatusHistoryComment($text)->save();
+							$order->addStatusHistoryComment('Can not cancel pending order after 30 minutes.')->save();
 							$msg[] = $order->getData('increment_id').' ; '.$order->getData('created_at').' ; '.
 								$order->getData('state').'/'.$order->getData('status').'/'.$method.' ; order is NOT cancelable';
 						}
