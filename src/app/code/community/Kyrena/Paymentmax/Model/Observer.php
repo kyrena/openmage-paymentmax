@@ -1,7 +1,7 @@
 <?php
 /**
  * Created V/22/10/2021
- * Updated V/14/04/2023
+ * Updated L/05/06/2023
  *
  * Copyright 2021-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * Copyright 2021-2022 | Jérôme Siau <jerome~cellublue~com>
@@ -95,7 +95,6 @@ class Kyrena_Paymentmax_Model_Observer {
 
 		$msg      = [];
 		$count    = 0;
-		$hasError = false;
 		$payments = Mage::getSingleton('payment/config')->getAllMethods();
 		$storeIds = Mage::getResourceModel('core/store_collection')->getAllIds(); // with admin
 		sort($storeIds);
@@ -166,29 +165,31 @@ class Kyrena_Paymentmax_Model_Observer {
 						}
 					}
 					catch (Throwable $t) {
-						$hasError = true;
+						Mage::logException($t);
 						$msg[] = $order->getData('increment_id').' ; '.$method.' ERROR '.$t->getMessage();
+						if (is_object($cron))
+							$cron->setIsError(true);
 					}
 
 					if (is_object($cron) && ((++$count % 100) == 0))
-						$this->saveCron($cron, $msg);
+						$cron->setData('messages', $this->getCronMessage($msg))->save();
 				}
 
 				if (is_object($cron))
-					$this->saveCron($cron, $msg);
+					$cron->setData('messages', $this->getCronMessage($msg))->save();
 			}
 		}
 
 		if (is_object($cron)) {
-			$this->saveCron($cron, $msg);
-			if ($hasError) // pour le statut du cron
-				Mage::throwException('At least one error occurred while canceling orders.'."\n\n".$cron->getData('messages')."\n\n");
+			$cron->setData('messages', $this->getCronMessage($msg));
+			if (!method_exists($cron, 'getIsError') && ($cron->getIsError() === true)) // without PR 3310
+				Mage::throwException('At least one error occurred while cancelling orders.'."\n\n".$cron->getData('messages')."\n\n");
 		}
 
 		return $msg;
 	}
 
-	protected function saveCron($cron, $msg) {
-		$cron->setData('messages', 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).'M (max: '.ini_get('memory_limit').')'."\n".implode("\n", $msg));
+	protected function getCronMessage($msg) {
+		return 'memory: '.((int) (memory_get_peak_usage(true) / 1024 / 1024)).'M (max: '.ini_get('memory_limit').')'."\n".implode("\n", $msg);
 	}
 }
